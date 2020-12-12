@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import logo from './logo.svg';
 import './App.css';
-import Timer from "./Timer";
+// import Timer from "./Timer";
 
 function App() {
   const [currentTime, setCurrentTime] = useState(0);

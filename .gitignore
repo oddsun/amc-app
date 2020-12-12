@@ -26,3 +26,8 @@ yarn-error.log*
 venv
 __pycache__
 .idea
+*.sqlite3
+/api/app/static
+
+# MathJax
+/public/*.js

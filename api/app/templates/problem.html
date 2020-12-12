@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ problem.contest_name }} Problem {{ id }}</title>
+    <script>
+MathJax = {
+  tex: {
+    inlineMath: [['$', '$'], ['\\(', '\\)']]
+  }
+};
+    </script>
+    <script>
+        function record_choice(choice) {
+            var xhttp = new XMLHttpRequest();
+            xhttp.open("GET", `/record/{{ problem.contest_name }}/{{ problem.id }}/${choice}`, true);
+            xhttp.send();
+        };
+    </script>
+    <script type="text/javascript" id="MathJax-script" async
+            src="http://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+    </script>
+    <style>
+        .latexcenter {
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        fieldset {
+            text-align: center;
+        }
+        label {
+            margin-right: 1em;
+            margin-left: 0.1em;
+        }
+        input {
+            margin-left: 1em;
+        }
+
+    </style>
+</head>
+<body>
+
+<h1> {{ problem.contest_name }} Problem {{ id }} </h1>
+
+<div>
+    <p> {{ problem.problem | safe }} </p>
+</div>
+<fieldset>
+    {% for choice in problem.choices %}
+    <input type="radio" name="problem_choice" id="{{ choice }}" value="{{ loop.index }}"
+           onclick="record_choice({{loop.index}})"><label for="{{ choice }}">{{ choice
+    }}</label>
+    {% endfor %}
+</fieldset>
+</body>
+</html>

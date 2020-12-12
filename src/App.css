@@ -2,6 +2,17 @@
   text-align: center;
 }
 
+html {
+  overflow: hidden;
+}
+
+
+.latexcenter {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+
 .App-logo {
   height: 40vmin;
   pointer-events: none;

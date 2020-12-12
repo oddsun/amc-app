@@ -1,58 +1,68 @@
 import React from 'react';
-import GradientCircularProgress from './GradientCircularProgress';
-import { CircularProgressProps } from '@material-ui/core'
-import Typography from '@material-ui/core/Typography';
-import Box from '@material-ui/core/Box';
+import TimerStatic from './TimerStatic';
+import Button from '@material-ui/core/Button';
 
-function normalize(secs: number, max_secs: number) {
-  return 100 - secs / max_secs * 100;
-}
+function Timer(props: { max_secs: number }) {
+  // const [startTime, setStartTime] = React.useState(0);
+  const [secs, setSecs] = React.useState(0);
+  const [timerRunning, setTimerRunning] = React.useState(false);
+  const [buttonText, setButtonText] = React.useState('Start');
 
-function sec2hm(secs: number) {
-  var sec = secs % 60;
-  var min = Math.floor(secs / 60);
-  var hr = Math.floor(min / 60);
-  min = min % 60;
-  var hr_str = String(hr).padStart(2, '0')
-  var min_str = String(min).padStart(2, '0')
-  var sec_str = String(sec).padStart(2, '0')
-  return `${hr_str}:${min_str}:${sec_str}`
-}
+  const { max_secs } = props;
 
-function CircularProgressWithLabel(props: CircularProgressProps & { value: number, secs: number }) {
-  const { secs, ...otherProps } = props;
+  React.useEffect(() => {
+    if (timerRunning) {
+      // console.log(timerRunning);
+      var startTime = new Date().getTime();
+      // console.log(startTime);
+      setSecs(0);
+      const timer = setInterval(() => {
+        var secs = Math.floor((new Date().getTime() - startTime) / 1000);
+        // console.log(secs);
+        // console.log(timerRunning);
+        if (!timerRunning || secs > max_secs) {
+          clearInterval(timer);
+          if (secs > max_secs) {
+            setSecs(max_secs);
+          }
+        } else {
+          setSecs(secs);
+        }
+      }, 1000);
+      return () => {
+        clearInterval(timer);
+      };
+    } else {
+      console.log(timerRunning);
+    }
+  }, [max_secs, timerRunning]);
+
+  const handleButtonClick = () => {
+    // console.log('clicked')
+    if (!timerRunning) {
+      // setStartTime(new Date().getTime());
+      setTimerRunning(true);
+      setButtonText('Stop');
+    } else {
+      // updating timerRunning calls useEffect and cleans up previous call
+      // via the returned method (i.e. clearInterval), i.e. stopping the timer
+      setTimerRunning(false);
+      setButtonText('Start');
+    }
+  };
+
   return (
-    <Box position="relative" display="inline-flex">
-      <GradientCircularProgress variant="determinate" {...otherProps} size='30em' />
-      <Box
-        top={0}
-        left={0}
-        bottom={0}
-        right={0}
-        position="absolute"
-        display="flex"
-        alignItems="center"
-        justifyContent="center"
+    <div className="Timer" id="timer-container">
+      <div><TimerStatic max_secs={max_secs} secs={secs} /></div><br />
+      <div><Button
+        variant="contained"
+        color="primary"
+        onClick={handleButtonClick}
       >
-        <Typography variant="h1" component="div" color="textSecondary">{`${sec2hm(
-          secs,
-        )}`}</Typography>
-      </Box>
-    </Box>
+        {buttonText}
+      </Button></div>
+    </div>
   );
 }
 
-export default function Timer(props: { secs: number, max_secs: number }) {
-  // const [secs, setSecs] = React.useState(0);
-  //
-  // React.useEffect(() => {
-  //   const timer = setInterval(() => {
-  //     setSecs((prevProgress) => (prevProgress >= 100 ? 0 : prevProgress + 10));
-  //   }, 800);
-  //   return () => {
-  //     clearInterval(timer);
-  //   };
-  // }, []);
-
-  return <CircularProgressWithLabel value={normalize(props.secs, props.max_secs)} secs={props.max_secs - props.secs} />;
-}
+export default Timer;
