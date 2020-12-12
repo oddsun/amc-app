@@ -34,22 +34,28 @@ const drawerWidth = 240;
 // );
 
 function App() {
-  const [startTime, setStartTime] = React.useState(0);
+  // const [startTime, setStartTime] = React.useState(0);
   const [secs, setSecs] = React.useState(0);
   const [timerRunning, setTimerRunning] = React.useState(false);
+  const [buttonText, setButtonText] = React.useState('Start');
 
-  const max_secs = 4500;
+  const max_secs = 10;
 
   React.useEffect(() => {
     if (timerRunning) {
       console.log(timerRunning);
+      var startTime = new Date().getTime();
       console.log(startTime);
+      setSecs(0);
       const timer = setInterval(() => {
         var secs = Math.floor((new Date().getTime() - startTime) / 1000);
         console.log(secs);
         console.log(timerRunning);
         if (!timerRunning || secs > max_secs) {
           clearInterval(timer);
+          if (secs > max_secs) {
+            setSecs(max_secs);
+          }
         } else {
           setSecs(secs);
         }
@@ -60,23 +66,26 @@ function App() {
     } else {
       console.log(timerRunning);
     }
-  }, [startTime, timerRunning]);
+  }, [timerRunning]);
 
   const handleButtonClick = () => {
     // console.log('clicked')
     if (!timerRunning) {
-      setStartTime(new Date().getTime());
+      // setStartTime(new Date().getTime());
       setTimerRunning(true);
+      setButtonText('Stop');
     } else {
-      // console.log('stopping?')
+      // updating timerRunning calls useEffect and cleans up previous call
+      // via the returned method (i.e. clearInterval), i.e. stopping the timer
       setTimerRunning(false);
+      setButtonText('Start');
     }
   };
 
   return (
     <div className="App" id="outer-container">
       <div id="page-wrap">
-        <h1>Cool Restaurant</h1>
+        <h1>Cool Timer</h1>
         <h2>Check out our offerings in the sidebar!</h2>
         <div><Timer max_secs={max_secs} secs={secs} /></div><br />
         <div><Button
@@ -84,7 +93,7 @@ function App() {
           color="primary"
           onClick={handleButtonClick}
         >
-          Start
+          {buttonText}
         </Button></div>
       </div>
     </div>
