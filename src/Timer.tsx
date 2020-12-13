@@ -1,14 +1,10 @@
 import React from 'react';
 import TimerStatic from './TimerStatic';
-import Button from '@material-ui/core/Button';
 
-function Timer(props: { max_secs: number }) {
-  // const [startTime, setStartTime] = React.useState(0);
+function Timer(props: { max_secs: number, timerRunning: boolean }) {
   const [secs, setSecs] = React.useState(0);
-  const [timerRunning, setTimerRunning] = React.useState(false);
-  const [buttonText, setButtonText] = React.useState('Start');
 
-  const { max_secs } = props;
+  const { max_secs, timerRunning } = props;
 
   React.useEffect(() => {
     if (timerRunning) {
@@ -37,31 +33,8 @@ function Timer(props: { max_secs: number }) {
     }
   }, [max_secs, timerRunning]);
 
-  const handleButtonClick = () => {
-    // console.log('clicked')
-    if (!timerRunning) {
-      // setStartTime(new Date().getTime());
-      setTimerRunning(true);
-      setButtonText('Stop');
-    } else {
-      // updating timerRunning calls useEffect and cleans up previous call
-      // via the returned method (i.e. clearInterval), i.e. stopping the timer
-      setTimerRunning(false);
-      setButtonText('Start');
-    }
-  };
-
   return (
-    <div className="Timer" id="timer-container">
-      <div><TimerStatic max_secs={max_secs} secs={secs} /></div><br />
-      <div><Button
-        variant="contained"
-        color="primary"
-        onClick={handleButtonClick}
-      >
-        {buttonText}
-      </Button></div>
-    </div>
+    <TimerStatic max_secs={max_secs} secs={secs} />
   );
 }
 

@@ -2,10 +2,17 @@
   text-align: center;
 }
 
+.hidden{
+  display: none;
+}
+
 html {
   overflow: hidden;
 }
 
+::-webkit-scrollbar {
+    display: none;
+}
 
 .latexcenter {
     display: block;
