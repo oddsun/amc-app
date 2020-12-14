@@ -19,6 +19,7 @@ import RadioButtons from './RadioButtons';
 import Button from '@material-ui/core/Button';
 import Box from '@material-ui/core/Box';
 import Choices from './Choices';
+import { useCookies } from 'react-cookie';
 
 const drawerWidth = 280;
 
@@ -64,6 +65,7 @@ const useStyles = makeStyles((theme: Theme) =>
 
 export default function App() {
   const classes = useStyles();
+  const [cookies, setCookies, removeCookies] = useCookies();
 
   interface ProblemDict {
     problem: string,
@@ -73,7 +75,7 @@ export default function App() {
 
   const num_problems = 25;
   const [contestName, setContestName] = React.useState('2019_AMC_12B')
-  const [problemIDs, setProblemIDs] = React.useState<number[]>([]);
+  // const [problemIDs, setProblemIDs] = React.useState<number[]>([]);
   const [selections, setSelections] = React.useState<number[]>([]);
   const [problemContentArray, setProblemContentArray] = React.useState<ProblemDict[]>([]);
   // const [problemContent, setProblemContent] = React.useState('');
@@ -81,6 +83,7 @@ export default function App() {
   const [currentSelection, setCurrentSelection] = React.useState(0);
   // const [currentTitle, setCurrentTitle] = React.useState('');
   const [timerRunning, setTimerRunning] = React.useState(false);
+  // const [startTime, setStartTIme] = React.useState(0);
   // const [hidden, setHidden] = React.useState(false);
   const handleListItemClick = (index: number) => {
     setCurrentSelection(index);
@@ -103,15 +106,15 @@ export default function App() {
   //   }
   // }
 
-  const handleChoiceSelection = (i: number) => {
+  const handleChoiceSelection = React.useCallback((i: number) => {
     return (event: React.ChangeEvent<HTMLInputElement>) => {
       setSelections(oldSelections => oldSelections.map((e, j) => (
         j !== i ? e : parseInt(event.target.value)
       )));
     }
-  }
+  }, []);
 
-  const handleButtonClick = () => {
+  const handleButtonClick = React.useCallback((timerRunning) => {
     // console.log('clicked')
     if (!timerRunning) {
       // setStartTime(new Date().getTime());
@@ -124,18 +127,32 @@ export default function App() {
       // setTimerRunning(false);
       // setButtonText('Start');
     }
-  };
+  }, []);
+
+  const clearCache = React.useCallback(() => {
+    removeCookies(contestName, { path: '/' });
+    removeCookies(`${contestName}-time`, { path: '/' });
+    setSelections(problemContentArray.map((e: ProblemDict, i: number) => -1));
+  }, [contestName, problemContentArray, setCookies]);
 
   React.useEffect(() => {
     setContestName('2019_AMC_12B');
   }, []);
 
   React.useEffect(() => {
+    setCookies(contestName, selections, { path: '/' })
+  }, [contestName, selections, setCookies])
+
+  React.useEffect(() => {
     fetch(`/problem/${contestName}`).then(res => res.json()).then(data => {
       console.log(data);
       var results = data.results;
-      setProblemIDs(results.map((e: ProblemDict, i: number) => i + 1));
-      setSelections(results.map((e: ProblemDict, i: number) => -1));
+      // setProblemIDs(results.map((e: ProblemDict, i: number) => i + 1));
+      if (cookies.hasOwnProperty(contestName)) {
+        setSelections(cookies[contestName]);
+      } else {
+        setSelections(results.map((e: ProblemDict, i: number) => -1));
+      }
       setProblemContentArray(results);
     });
   }, [contestName]);
@@ -148,7 +165,7 @@ export default function App() {
         refs[currentSelection - 1] ?.current ?.scrollIntoView();
       }
     }
-  }, [currentSelection])
+  }, [currentSelection, refs])
 
   // React.useEffect(() => {
   //   // if (refs != null && refs[currentSelection - 1].current) {
@@ -180,7 +197,8 @@ export default function App() {
         e.preventDefault();
       } else if (e.keyCode === 40 || e.keyCode === 39) {
         console.log('down...')
-        setCurrentSelection(index => Math.min(index + 1, Math.max(...problemIDs)));
+        // setCurrentSelection(index => Math.min(index + 1, Math.max(...problemIDs)));
+        setCurrentSelection(index => Math.min(index + 1, problemContentArray.length));
         // console.log(currentSelection);
         e.preventDefault();
       }
@@ -197,7 +215,7 @@ export default function App() {
     //     e.preventDefault();
     //   }
     // });
-  }, [problemIDs]);
+  }, [problemContentArray]);
 
   React.useEffect(() => {
     // MathJaxScript();
@@ -220,7 +238,7 @@ export default function App() {
             {contestName.replace(/_/g, ' ')}
           </Typography>
 
-          <Timer max_secs={4500} timerRunning={timerRunning} />
+          <Timer max_secs={4500} timerRunning={timerRunning} contestName={contestName} />
         </Toolbar>
       </AppBar>
       <Drawer
@@ -233,14 +251,14 @@ export default function App() {
         <Toolbar />
         <div className={classes.drawerContainer}>
           <List>
-            {problemIDs.map((text, index) => (
-              <ListItem ref={refs[index]} key={text} divider button onClick={() => handleListItemClick(text)}
-                className={text === currentSelection ? classes.borderHighlight : ''}
+            {problemContentArray.map((content, index) => (
+              <ListItem ref={refs[index]} key={index + 1} divider button onClick={() => handleListItemClick(index + 1)}
+                className={index + 1 === currentSelection ? classes.borderHighlight : ''}
               // selected={text === currentSelection} classes={{
               //   selected: classes.borderHighlight,
               // }}
               >
-                <ListItemText primary={text} />
+                <ListItemText primary={index + 1} />
                 <RadioButtons selectedValue={selections[index]} />
               </ListItem>
             ))}
@@ -263,7 +281,14 @@ export default function App() {
           // <Typography dangerouslySetInnerHTML={{ __html: problemContent }}></Typography>
           // <Choices handleChange={handleChoiceSelection(currentSelection - 1)} selectedValue={selections[currentSelection - 1]} choices={problemChoices} />
         }
-        <Box className={currentSelection === 0 ? 'App' : 'App hidden'}><Button variant="contained" color="primary" onClick={handleButtonClick} > Start </Button></Box>
+        <Box className={currentSelection === 0 ? 'App' : 'App hidden'}>
+          <Box m={2}>
+            <Button variant="contained" color="primary" onClick={() => handleButtonClick(timerRunning)} > Start </Button>
+          </Box>
+          <Box m={2}>
+            <Button variant="contained" color="primary" onClick={clearCache} > Clear </Button>
+          </Box>
+        </Box>
       </main>
     </div>
   );

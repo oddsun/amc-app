@@ -20,7 +20,7 @@ export default function RadioButtons(props: { selectedValue: number }) {
   // const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
   //   setSelectedValue(event.target.value);
   // };
-  const handleChange = () => { };
+  // const handleChange = () => { };
 
   const { selectedValue } = props;
 
@@ -29,7 +29,6 @@ export default function RadioButtons(props: { selectedValue: number }) {
       {Array.from(Array(5)).map((text, index) => (
         <Radio
           checked={selectedValue === index}
-          onChange={handleChange}
           disabled
           value={index}
           key={index}

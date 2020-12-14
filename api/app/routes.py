@@ -31,7 +31,7 @@ def problem(contest_name, id):
 def problems(contest_name):
     contest_name = contest_name.replace('_', ' ')
     problems = Problem.query.filter_by(contest_name=contest_name).all()
-    print(problems)
+    # print(problems)
     for problem in problems:
         problem.problem = problem.problem.replace('static/data/imgs', '/static/data/imgs').replace('<img', '<br/><br/><img')
         # problem.choices = ast.literal_eval(problem.choices)
