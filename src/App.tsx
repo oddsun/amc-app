@@ -78,6 +78,7 @@ export default function App() {
   const [contestName, setContestName] = React.useState('');
   const [buttonText, setButtonText] = React.useState('Start');
   // const [problemIDs, setProblemIDs] = React.useState<number[]>([]);
+  // TODO: slow for long contest
   const [selections, setSelections] = React.useState<number[]>([]);
   const [availableContests, setAvailableContests] = React.useState([]);
   const [problemContentArray, setProblemContentArray] = React.useState<ProblemDict[]>([]);
@@ -124,8 +125,10 @@ export default function App() {
     }
   }, []);
 
-  const handleButtonClick = React.useCallback((timerRunning) => {
+  const handleButtonClick = React.useCallback((timerRunning, contestName) => {
     // console.log('clicked')
+    // console.log(timerRunning)
+    // console.log(contestName)
     if ((!timerRunning) && contestName !== '') {
       // setStartTime(new Date().getTime());
       setTimerRunning(true);
@@ -145,7 +148,7 @@ export default function App() {
       removeCookies(`${contestName}-time`, { path: '/' });
       setSelections(problemContentArray.map((e: ProblemDict, i: number) => -1));
     }
-  }, [contestName, problemContentArray, setCookies]);
+  }, [contestName, problemContentArray, removeCookies]);
 
   // React.useEffect(() => {
   //   setContestName('2019_AMC_12B');
@@ -302,10 +305,10 @@ export default function App() {
         }
         <Box className={currentSelection === 0 ? 'App' : 'App hidden'}>
           <Box m={2}>
-            <ContestListSelector contestList={availableContests} setContestName={setContestName} />
+            <ContestListSelector contestList={availableContests} setContestName={setContestName} disabled={timerRunning} />
           </Box>
           <Box m={2}>
-            <Button variant="contained" color="primary" onClick={() => handleButtonClick(timerRunning)} > {buttonText} </Button>
+            <Button variant="contained" color="primary" onClick={() => handleButtonClick(timerRunning, contestName)} > {buttonText} </Button>
           </Box>
           <Box m={2}>
             <Button variant="contained" color="primary" onClick={clearCache} > Clear </Button>

@@ -2,7 +2,7 @@ import React from 'react';
 import TextField from '@material-ui/core/TextField';
 import Autocomplete from '@material-ui/lab/Autocomplete';
 
-export default function ContestListSelector(props: { contestList: string[], setContestName: (contestName: string) => void }) {
+export default function ContestListSelector(props: { disabled: boolean, contestList: string[], setContestName: (contestName: string) => void }) {
   return (
     <Autocomplete
       className="auto-margin"
@@ -11,6 +11,7 @@ export default function ContestListSelector(props: { contestList: string[], setC
       onChange={(event, newContest) => { if (newContest) { props.setContestName(newContest.replace(/ /g, '_')) } }}
       style={{ width: 300 }}
       renderInput={(params) => <TextField {...params} label="Choose Contest" variant="outlined" />}
+      disabled={props.disabled}
     />
   );
 }

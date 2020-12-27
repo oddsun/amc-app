@@ -46,7 +46,7 @@ function Timer(props: { max_secs: number, timerRunning: boolean, contestName: st
         clearInterval(timer);
       };
     } else {
-      console.log(timerRunning);
+      // console.log(timerRunning);
     }
   }, [max_secs, timerRunning, contestName]);
 
