@@ -1,7 +1,7 @@
 import './App.css';
 import Drawer from '@material-ui/core/Drawer';
 import AppBar from '@material-ui/core/AppBar';
-import Timer from './Timer'
+import Timer from './Timer';
 import React from 'react';
 import { createStyles, Theme, makeStyles } from '@material-ui/core/styles';
 import CssBaseline from '@material-ui/core/CssBaseline';
@@ -15,11 +15,12 @@ import ListItemText from '@material-ui/core/ListItemText';
 // import InboxIcon from '@material-ui/icons/MoveToInbox';
 // import MailIcon from '@material-ui/icons/Mail';
 import RadioButtons from './RadioButtons';
-// import MathJaxScript from './MathJax'
+// import MathJaxScript from './MathJax';
 import Button from '@material-ui/core/Button';
 import Box from '@material-ui/core/Box';
 import Choices from './Choices';
 import { useCookies } from 'react-cookie';
+import ContestListSelector from './ContestListSelector';
 
 const drawerWidth = 280;
 
@@ -73,10 +74,12 @@ export default function App() {
     id: number
   }
 
-  const num_problems = 25;
-  const [contestName, setContestName] = React.useState('2019_AMC_12B')
+  // const [numProblems, setNumProblems] = React.useState('');
+  const [contestName, setContestName] = React.useState('');
+  const [buttonText, setButtonText] = React.useState('Start');
   // const [problemIDs, setProblemIDs] = React.useState<number[]>([]);
   const [selections, setSelections] = React.useState<number[]>([]);
+  const [availableContests, setAvailableContests] = React.useState([]);
   const [problemContentArray, setProblemContentArray] = React.useState<ProblemDict[]>([]);
   // const [problemContent, setProblemContent] = React.useState('');
   // const [problemChoices, setProblemChoices] = React.useState<string[]>([]);
@@ -85,14 +88,21 @@ export default function App() {
   const [timerRunning, setTimerRunning] = React.useState(false);
   // const [startTime, setStartTIme] = React.useState(0);
   // const [hidden, setHidden] = React.useState(false);
-  const handleListItemClick = (index: number) => {
+  const handleListItemClick = React.useCallback((index: number) => {
     setCurrentSelection(index);
-  };
-  const refs = React.useMemo<React.RefObject<HTMLDivElement>[]>(() => Array.from({ length: num_problems }).map(
-    () => React.createRef()
-  ), []);
-
-
+  }, []);
+  // const refs = React.useMemo<React.RefObject<HTMLDivElement>[]>(() => problemContentArray.map(
+  //   (e, i) => React.createRef()
+  // ), [problemContentArray]);
+  const [refs, setRefs] = React.useState<React.RefObject<HTMLDivElement>[]>([]);
+  // const availableContests = React.useMemo(() => {
+  //   fetch(`/api/available_contests`).then(res => res.json()).then(data => data.available_contests
+  //   )
+  // }, []);
+  React.useEffect(() => {
+    fetch(`/api/available_contests`).then(res => res.json()).then(data => { setAvailableContests(data.available_contests) }
+    )
+  }, [])
 
   // const renderContent = () => {
   //   if (currentSelection) {
@@ -116,49 +126,58 @@ export default function App() {
 
   const handleButtonClick = React.useCallback((timerRunning) => {
     // console.log('clicked')
-    if (!timerRunning) {
+    if ((!timerRunning) && contestName !== '') {
       // setStartTime(new Date().getTime());
       setTimerRunning(true);
       setCurrentSelection(1);
-      // setButtonText('Stop');
+      setButtonText('Submit');
     } else {
       // updating timerRunning calls useEffect and cleans up previous call
       // via the returned method (i.e. clearInterval), i.e. stopping the timer
-      // setTimerRunning(false);
-      // setButtonText('Start');
+      setTimerRunning(false);
+      setButtonText('Start');
     }
   }, []);
 
   const clearCache = React.useCallback(() => {
-    removeCookies(contestName, { path: '/' });
-    removeCookies(`${contestName}-time`, { path: '/' });
-    setSelections(problemContentArray.map((e: ProblemDict, i: number) => -1));
+    if (contestName) {
+      removeCookies(contestName, { path: '/' });
+      removeCookies(`${contestName}-time`, { path: '/' });
+      setSelections(problemContentArray.map((e: ProblemDict, i: number) => -1));
+    }
   }, [contestName, problemContentArray, setCookies]);
 
-  React.useEffect(() => {
-    setContestName('2019_AMC_12B');
-  }, []);
+  // React.useEffect(() => {
+  //   setContestName('2019_AMC_12B');
+  // }, []);
 
   React.useEffect(() => {
-    setCookies(contestName, selections, { path: '/' })
+    if (contestName) {
+      setCookies(contestName, selections, { path: '/' })
+    }
   }, [contestName, selections, setCookies])
 
   React.useEffect(() => {
-    fetch(`/problem/${contestName}`).then(res => res.json()).then(data => {
-      console.log(data);
-      var results = data.results;
-      // setProblemIDs(results.map((e: ProblemDict, i: number) => i + 1));
-      if (cookies.hasOwnProperty(contestName)) {
-        setSelections(cookies[contestName]);
-      } else {
-        setSelections(results.map((e: ProblemDict, i: number) => -1));
-      }
-      setProblemContentArray(results);
-    });
+    if (contestName) {
+      fetch(`/api/problem/${contestName}`).then(res => res.json()).then(data => {
+        // console.log(data);
+        var results = data.results;
+        // setProblemIDs(results.map((e: ProblemDict, i: number) => i + 1));
+        if (cookies.hasOwnProperty(contestName)) {
+          setSelections(cookies[contestName]);
+        } else {
+          setSelections(results.map((e: ProblemDict, i: number) => -1));
+        }
+        setProblemContentArray(results);
+        setRefs(results.map(
+          () => React.createRef()
+        ));
+      });
+    }
   }, [contestName]);
 
   React.useEffect(() => {
-    if (currentSelection > 0) {
+    if (currentSelection > 0 && currentSelection < refs.length) {
       var rect = refs[currentSelection - 1] ?.current ?.getBoundingClientRect();
       var viewHeight = Math.max(document.documentElement.clientHeight, window.innerHeight);
       if ((rect as DOMRect).top < 64 || (rect as DOMRect).top - viewHeight >= 0) {
@@ -196,7 +215,7 @@ export default function App() {
         setCurrentSelection(index => Math.max(index - 1, 0));
         e.preventDefault();
       } else if (e.keyCode === 40 || e.keyCode === 39) {
-        console.log('down...')
+        // console.log('down...')
         // setCurrentSelection(index => Math.min(index + 1, Math.max(...problemIDs)));
         setCurrentSelection(index => Math.min(index + 1, problemContentArray.length));
         // console.log(currentSelection);
@@ -283,7 +302,10 @@ export default function App() {
         }
         <Box className={currentSelection === 0 ? 'App' : 'App hidden'}>
           <Box m={2}>
-            <Button variant="contained" color="primary" onClick={() => handleButtonClick(timerRunning)} > Start </Button>
+            <ContestListSelector contestList={availableContests} setContestName={setContestName} />
+          </Box>
+          <Box m={2}>
+            <Button variant="contained" color="primary" onClick={() => handleButtonClick(timerRunning)} > {buttonText} </Button>
           </Box>
           <Box m={2}>
             <Button variant="contained" color="primary" onClick={clearCache} > Clear </Button>

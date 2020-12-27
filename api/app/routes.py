@@ -11,7 +11,7 @@ import ast
 #     return render_template('index.html', title='Home', user=user)
 
 
-@app.route('/problem/<contest_name>/<id>')
+@app.route('/api/problem/<contest_name>/<id>')
 def problem(contest_name, id):
     id_0 = int(id) - 1
     contest_name = contest_name.replace('_', ' ')
@@ -27,7 +27,7 @@ def problem(contest_name, id):
     # print(type(problem.problem))
     return {'problem' : problem.problem, 'choices': problem.choices}
 
-@app.route('/problem/<contest_name>')
+@app.route('/api/problem/<contest_name>')
 def problems(contest_name):
     contest_name = contest_name.replace('_', ' ')
     problems = Problem.query.filter_by(contest_name=contest_name).all()
@@ -44,6 +44,11 @@ def problems(contest_name):
     # print(type(problems[0].problem))
     return {'results': sorted(({'problem' : problem.problem, 'choices': problem.choices, 'id':problem.id} for problem in problems), key=lambda x: x['id'])}
 
+
+@app.route('/api/available_contests')
+def available_contests():
+    contests = Problem.query.with_entities(Problem.contest_name).distinct()
+    return {'available_contests': [x[0] for x in contests]}
 # @app.route('/test')
 # def test():
 #     return render_template('test.html')
