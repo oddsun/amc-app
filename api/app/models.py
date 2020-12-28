@@ -20,7 +20,7 @@ class User(db.Model):
     __bind_key__ = 'response'
     # __tablename__
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(20), nullable=False)
+    name = db.Column(db.String(20), unique=True, nullable=False)
     responses = db.relationship('Response', backref='user', lazy=True)
     response_times = db.relationship('ResponseTime', backref='user', lazy=True)
 
@@ -35,7 +35,7 @@ class ResponseTime(db.Model):
     problem_id = db.Column(db.Integer, nullable=False)
     entry_type = db.Column(db.String(10), nullable=False)
     contest_name = db.Column(db.String(20), nullable=False)
-    entry_time = db.Column(db.DateTime, server_default=func.utcnow())
+    entry_time = db.Column(db.DateTime, server_default=func.now())
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'),
         nullable=False)
 
@@ -55,7 +55,7 @@ class Response(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     response_str = db.Column(db.String(150), nullable=False)
     contest_name = db.Column(db.String(20), nullable=False)
-    entry_time = db.Column(db.DateTime, server_default=func.utcnow())
+    entry_time = db.Column(db.DateTime, server_default=func.now())
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'),
         nullable=False)
 

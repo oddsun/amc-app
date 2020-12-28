@@ -22,6 +22,7 @@ import Box from '@material-ui/core/Box';
 import Choices from './Choices';
 import { useCookies } from 'react-cookie';
 import ContestListSelector from './ContestListSelector';
+import UserSelector from './UserSelector';
 // import Problem from './Problem';
 
 const drawerWidth = 280;
@@ -73,6 +74,10 @@ const correctAnswer: number = 6;
 const emptyAnswer: number = 1.5;
 const wrongAnswer: number = 0;
 
+interface UserOptionType {
+  name: string;
+  id: number;
+}
 
 export default function App() {
   const classes = useStyles();
@@ -100,7 +105,10 @@ export default function App() {
   const [currentSelection, setCurrentSelection] = React.useState(0);
   // const [currentTitle, setCurrentTitle] = React.useState('');
   const [timerRunning, setTimerRunning] = React.useState(false);
+  const [timerWasRunning, setTimerWasRunning] = React.useState(false);
   const [graded, setGraded] = React.useState(false);
+  const [userList, setUserList] = React.useState<UserOptionType[]>([]);
+  const [currentUser, setCurrentUser] = React.useState('');
   // const [startTime, setStartTIme] = React.useState(0);
   // const [hidden, setHidden] = React.useState(false);
   const handleListItemClick = React.useCallback((index: number) => {
@@ -114,10 +122,64 @@ export default function App() {
   //   fetch(`/api/available_contests`).then(res => res.json()).then(data => data.available_contests
   //   )
   // }, []);
+  const getUserList = React.useCallback(() => {
+    fetch('/api/users').then(res => res.json()).then(data => { setUserList(data.results) }
+    );
+  }, []);
+
+  const addUser = React.useCallback((user_name) => {
+    fetch(`/api/adduser/${user_name}`).then(res => res.json()).then(data => { if (data.results) { setUserList(data.results) } }
+    );
+  }, []);
+
+  const addSetCurrentUser = React.useCallback((user_name) => {
+    const found = userList.some(el => el.name === user_name)
+    if (!found) {
+      addUser(user_name);
+    }
+    setCurrentUser(user_name);
+  }, [userList, addUser]);
+
+  const recordTime = React.useCallback((contestName, currentSelection, entry_type, currentUser) => {
+    const postData = {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        user_name: currentUser,
+        problem_id: currentSelection,
+        entry_type: entry_type,
+        contest_name: contestName
+      })
+    };
+    fetch('/api/response_time', postData);
+  }, [])
+
+  const recordResponse = React.useCallback((contestName, selections, currentUser) => {
+    const postData = {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        user_name: currentUser,
+        contest_name: contestName,
+        response: convertSelections(selections)
+      })
+    };
+    fetch('/api/response', postData);
+  }, [])
+
+  React.useEffect(() => {
+    if (currentSelection > 0 && timerRunning) {
+      recordTime(contestName, currentSelection, 'enter', currentUser);
+      return () => recordTime(contestName, currentSelection, 'exit', currentUser);
+    }
+  }, [currentSelection, recordTime, timerRunning, contestName, currentUser])
+
   React.useEffect(() => {
     fetch(`/api/available_contests`).then(res => res.json()).then(data => { setAvailableContests(data.available_contests) }
-    )
-  }, [])
+    );
+    getUserList();
+  }, [getUserList])
+
 
   const convertSelections = React.useCallback((selections: { [key: string]: number }) => {
     return Object.keys(selections).sort().map(key => selections[key] === -1 ? '' : String.fromCharCode(65 + selections[key]))
@@ -157,7 +219,9 @@ export default function App() {
   const turnOffTimer = React.useCallback(() => {
     setTimerRunning(false);
     setButtonText('Start');
-  }, [])
+  }, [contestName, currentUser])
+
+
 
   const handleButtonClick = React.useCallback((timerRunning, contestName, selections) => {
     // console.log('clicked')
@@ -166,6 +230,7 @@ export default function App() {
     if ((!timerRunning) && contestName !== '') {
       // setStartTime(new Date().getTime());
       setTimerRunning(true);
+      setTimerWasRunning(true);
       setCurrentSelection(1);
       setButtonText('Submit');
       setGraded(false);
@@ -177,7 +242,7 @@ export default function App() {
       turnOffTimer();
       // console.log(handleSubmit(selections))
     }
-  }, []);
+  }, [turnOffTimer]);
 
 
   const clearCache = React.useCallback(() => {
@@ -208,7 +273,15 @@ export default function App() {
       }
       )
     }
-  }, [contestName]);
+  }, [contestName, convertSelections]);
+
+  React.useEffect(() => {
+    if (!timerRunning && timerWasRunning) {
+      recordTime(contestName, 0, 'end', currentUser);
+      recordResponse(contestName, selections, currentUser);
+      setTimerWasRunning(false);
+    }
+  }, [timerRunning, timerWasRunning])
 
   React.useEffect(() => {
     if (contestName) {
@@ -320,7 +393,7 @@ export default function App() {
             {contestName.replace(/_/g, ' ')}
           </Typography>
 
-          <Timer max_secs={10} timerRunning={timerRunning} contestName={contestName} turnOffTimer={turnOffTimer} />
+          <Timer max_secs={4500} timerRunning={timerRunning} contestName={contestName} turnOffTimer={turnOffTimer} />
         </Toolbar>
       </AppBar>
       <Drawer
@@ -369,6 +442,9 @@ export default function App() {
         <Box className={currentSelection === 0 ? 'App' : 'App hidden'}>
           <Box m={2}>
             <ContestListSelector contestList={availableContests} setContestName={setContestName} disabled={timerRunning} />
+          </Box>
+          <Box m={2}>
+            <UserSelector userList={userList} setUserName={addSetCurrentUser} disabled={timerRunning} />
           </Box>
           <Box m={2}>
             <Button variant="contained" color="primary" onClick={() => handleButtonClick(timerRunning, contestName, selections)}

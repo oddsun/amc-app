@@ -69,35 +69,41 @@ def add_user(user_name):
         new_user = User(name=user_name)
         db.session.add(new_user)
         db.session.commit()
-        return {'added': True}
-    return {'added': False}
+        return users()
+    return {'results': []}
 
 @app.route('/api/response', methods=['POST'])
 def response():
     request_data = request.get_json()
-    user_id = request_data['user_id']
-    resonse = ','.join(request_data['response'])
+    # user_id = request_data['user_id']
+    user_name = request_data['user_name']
+    response_str = ','.join(request_data['response'])
     contest_name = request_data['contest_name']
-    new_response = Response(response=response, contest_name=contest_name)
-    current_user = User.query.get_or_404(user_id)
+    new_response = Response(response_str=response_str, contest_name=contest_name)
+    # current_user = User.query.get_or_404(user_id)
+    current_user = User.query.filter_by(name=user_name).first_or_404()
     current_user.responses.append(new_response)
     db.session.add(new_response)
     db.session.commit()
+    return {'response': new_response.response_str, 'contest_name': new_response.contest_name}
 
 
 @app.route('/api/response_time', methods=['POST'])
 def response_time():
     request_data = request.get_json()
-    user_id = request_data['user_id']
-    problem_id = ','.join(request_data['problem_id'])
+    # user_id = request_data['user_id']
+    user_name = request_data['user_name']
+    problem_id = request_data['problem_id']
     contest_name = request_data['contest_name']
     entry_type = request_data['entry_type']
     new_rt = ResponseTime(problem_id=problem_id, contest_name=contest_name,
                             entry_type=entry_type)
-    current_user = User.query.get_or_404(user_id)
+    # current_user = User.query.get_or_404(user_id)
+    current_user = User.query.filter_by(name=user_name).first_or_404()
     current_user.response_times.append(new_rt)
     db.session.add(new_rt)
     db.session.commit()
+    return {column.name: getattr(new_rt, column.name) for column in new_rt.__table__.columns}
 # @app.route('/test')
 # def test():
 #     return render_template('test.html')

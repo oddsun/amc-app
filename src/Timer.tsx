@@ -49,7 +49,7 @@ function Timer(props: { max_secs: number, timerRunning: boolean, contestName: st
     } else {
       // console.log(timerRunning);
     }
-  }, [max_secs, timerRunning, contestName]);
+  }, [max_secs, timerRunning, contestName, setCookies, turnOffTimer]);
 
   return (
     <TimerStatic max_secs={max_secs} secs={secs} />
