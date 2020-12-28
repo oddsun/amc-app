@@ -1,6 +1,6 @@
-from flask import render_template
-from app import app
-from app.models import Problem, Answer
+from flask import render_template, request
+from app import app, db
+from app.models import Problem, Answer, User, Response, ResponseTime
 import ast
 
 
@@ -56,6 +56,48 @@ def answers(contest_name):
 def available_contests():
     contests = Problem.query.with_entities(Problem.contest_name).distinct()
     return {'available_contests': [x[0] for x in contests]}
+
+@app.route('/api/users')
+def users():
+    available_users = User.query.all()
+    results = [{column.name: getattr(row, column.name) for column in row.__table__.columns} for row in available_users]
+    return {'results': results}
+
+@app.route('/api/adduser/<user_name>')
+def add_user(user_name):
+    if not User.query.filter_by(name=user_name).all():
+        new_user = User(name=user_name)
+        db.session.add(new_user)
+        db.session.commit()
+        return {'added': True}
+    return {'added': False}
+
+@app.route('/api/response', methods=['POST'])
+def response():
+    request_data = request.get_json()
+    user_id = request_data['user_id']
+    resonse = ','.join(request_data['response'])
+    contest_name = request_data['contest_name']
+    new_response = Response(response=response, contest_name=contest_name)
+    current_user = User.query.get_or_404(user_id)
+    current_user.responses.append(new_response)
+    db.session.add(new_response)
+    db.session.commit()
+
+
+@app.route('/api/response_time', methods=['POST'])
+def response_time():
+    request_data = request.get_json()
+    user_id = request_data['user_id']
+    problem_id = ','.join(request_data['problem_id'])
+    contest_name = request_data['contest_name']
+    entry_type = request_data['entry_type']
+    new_rt = ResponseTime(problem_id=problem_id, contest_name=contest_name,
+                            entry_type=entry_type)
+    current_user = User.query.get_or_404(user_id)
+    current_user.response_times.append(new_rt)
+    db.session.add(new_rt)
+    db.session.commit()
 # @app.route('/test')
 # def test():
 #     return render_template('test.html')
