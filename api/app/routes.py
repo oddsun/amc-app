@@ -1,6 +1,6 @@
 from flask import render_template
 from app import app
-from app.models import Problem
+from app.models import Problem, Answer
 import ast
 
 
@@ -44,6 +44,13 @@ def problems(contest_name):
     # print(type(problems[0].problem))
     return {'results': sorted(({'problem' : problem.problem, 'choices': problem.choices, 'id':problem.id} for problem in problems), key=lambda x: x['id'])}
 
+
+@app.route('/api/answer/<contest_name>')
+def answers(contest_name):
+    contest_name = contest_name.replace('_', ' ')
+    answers = Answer.query.filter_by(contest_name=contest_name).all()
+    sorted_answers = [a.answer for a in sorted(answers, key=lambda x: x.id)]
+    return {'results': sorted_answers}
 
 @app.route('/api/available_contests')
 def available_contests():

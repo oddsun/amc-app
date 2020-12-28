@@ -14,6 +14,11 @@ html {
   margin: auto;
 }
 
+
+.header: {
+  padding: theme.spacing(1),
+},
+
 ::-webkit-scrollbar {
     display: none;
 }

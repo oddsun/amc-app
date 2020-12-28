@@ -2,9 +2,9 @@ import React from 'react';
 import TimerStatic from './TimerStatic';
 import { useCookies } from 'react-cookie';
 
-function Timer(props: { max_secs: number, timerRunning: boolean, contestName: string }) {
+function Timer(props: { max_secs: number, timerRunning: boolean, contestName: string, turnOffTimer: () => void }) {
   const [cookies, setCookies] = useCookies();
-  const { max_secs, timerRunning, contestName } = props;
+  const { max_secs, timerRunning, contestName, turnOffTimer } = props;
   const [secs, setSecs] = React.useState<number>(cookies.hasOwnProperty(`${contestName}-time`) ? Math.min(Math.floor((new Date().getTime() - cookies[`${contestName}-time`]) / 1000), max_secs) : 0);
 
   // React.useEffect(() => {
@@ -34,7 +34,8 @@ function Timer(props: { max_secs: number, timerRunning: boolean, contestName: st
         // console.log(secs);
         // console.log(timerRunning);
         if (!timerRunning || secs > max_secs) {
-          clearInterval(timer);
+          // clearInterval(timer);
+          turnOffTimer();
           if (secs > max_secs) {
             setSecs(max_secs);
           }

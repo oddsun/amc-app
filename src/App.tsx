@@ -8,6 +8,7 @@ import CssBaseline from '@material-ui/core/CssBaseline';
 import Toolbar from '@material-ui/core/Toolbar';
 import List from '@material-ui/core/List';
 import Typography from '@material-ui/core/Typography';
+import Grid from '@material-ui/core/Grid';
 // import Divider from '@material-ui/core/Divider';
 import ListItem from '@material-ui/core/ListItem';
 // import ListItemIcon from '@material-ui/core/ListItemIcon';
@@ -21,6 +22,7 @@ import Box from '@material-ui/core/Box';
 import Choices from './Choices';
 import { useCookies } from 'react-cookie';
 import ContestListSelector from './ContestListSelector';
+// import Problem from './Problem';
 
 const drawerWidth = 280;
 
@@ -54,6 +56,9 @@ const useStyles = makeStyles((theme: Theme) =>
     header: {
       padding: theme.spacing(1),
     },
+    paddie: {
+      margin: theme.spacing(1),
+    },
     borderHighlight: {
       borderWidth: 1,
       borderStyle: 'solid',
@@ -62,6 +67,11 @@ const useStyles = makeStyles((theme: Theme) =>
     }
   }),
 );
+
+
+const correctAnswer: number = 6;
+const emptyAnswer: number = 1.5;
+const wrongAnswer: number = 0;
 
 
 export default function App() {
@@ -79,7 +89,10 @@ export default function App() {
   const [buttonText, setButtonText] = React.useState('Start');
   // const [problemIDs, setProblemIDs] = React.useState<number[]>([]);
   // TODO: slow for long contest
-  const [selections, setSelections] = React.useState<number[]>([]);
+  // const [selections, setSelections] = React.useState<number[]>([]);
+  const [selections, setSelections] = React.useState<{ [key: string]: number }>({});
+  const [answers, setAnswers] = React.useState<string[]>([]);
+  const [totalScore, setTotalScore] = React.useState(0);
   const [availableContests, setAvailableContests] = React.useState([]);
   const [problemContentArray, setProblemContentArray] = React.useState<ProblemDict[]>([]);
   // const [problemContent, setProblemContent] = React.useState('');
@@ -87,6 +100,7 @@ export default function App() {
   const [currentSelection, setCurrentSelection] = React.useState(0);
   // const [currentTitle, setCurrentTitle] = React.useState('');
   const [timerRunning, setTimerRunning] = React.useState(false);
+  const [graded, setGraded] = React.useState(false);
   // const [startTime, setStartTIme] = React.useState(0);
   // const [hidden, setHidden] = React.useState(false);
   const handleListItemClick = React.useCallback((index: number) => {
@@ -105,6 +119,10 @@ export default function App() {
     )
   }, [])
 
+  const convertSelections = React.useCallback((selections: { [key: string]: number }) => {
+    return Object.keys(selections).sort().map(key => selections[key] === -1 ? '' : String.fromCharCode(65 + selections[key]))
+  }, []);
+
   // const renderContent = () => {
   //   if (currentSelection) {
   //     // return (
@@ -119,13 +137,29 @@ export default function App() {
 
   const handleChoiceSelection = React.useCallback((i: number) => {
     return (event: React.ChangeEvent<HTMLInputElement>) => {
-      setSelections(oldSelections => oldSelections.map((e, j) => (
-        j !== i ? e : parseInt(event.target.value)
-      )));
+      // setSelections(oldSelections => oldSelections.map((e, j) => (
+      //   j !== i ? e : parseInt(event.target.value)
+      // )));
+      // console.log(selections)
+      // selections[i] = parseInt(event.target.value)
+      // setSelections(oldSelections => {
+      //   let newSelections = [...oldSelections];
+      //   newSelections[i] = parseInt(event.target.value);
+      //   return newSelections;
+      // })
+      // var i_str = i.toString()
+      // console.log(selections)
+      setSelections(oldSelections => ({ ...oldSelections, [i]: parseInt(event.target.value) }));
     }
   }, []);
 
-  const handleButtonClick = React.useCallback((timerRunning, contestName) => {
+
+  const turnOffTimer = React.useCallback(() => {
+    setTimerRunning(false);
+    setButtonText('Start');
+  }, [])
+
+  const handleButtonClick = React.useCallback((timerRunning, contestName, selections) => {
     // console.log('clicked')
     // console.log(timerRunning)
     // console.log(contestName)
@@ -134,25 +168,47 @@ export default function App() {
       setTimerRunning(true);
       setCurrentSelection(1);
       setButtonText('Submit');
+      setGraded(false);
     } else {
       // updating timerRunning calls useEffect and cleans up previous call
       // via the returned method (i.e. clearInterval), i.e. stopping the timer
-      setTimerRunning(false);
-      setButtonText('Start');
+      // setTimerRunning(false);
+      // setButtonText('Start');
+      turnOffTimer();
+      // console.log(handleSubmit(selections))
     }
   }, []);
+
 
   const clearCache = React.useCallback(() => {
     if (contestName) {
       removeCookies(contestName, { path: '/' });
       removeCookies(`${contestName}-time`, { path: '/' });
-      setSelections(problemContentArray.map((e: ProblemDict, i: number) => -1));
+      // setSelections(problemContentArray.map((e: ProblemDict, i: number) => -1));
+      setSelections(problemContentArray.reduce((acc: { [key: string]: number }, element, index) => {
+        acc[index.toString()] = -1;
+        return acc
+      }, ({} as { [key: string]: number })));
     }
   }, [contestName, problemContentArray, removeCookies]);
 
   // React.useEffect(() => {
   //   setContestName('2019_AMC_12B');
   // }, []);
+
+  const grade = React.useCallback((selections) => {
+    if (contestName) {
+      fetch(`/api/answer/${contestName}`).then(res => res.json()).then(data => {
+        var answer = data.results;
+        setAnswers(answer);
+        var scores = convertSelections(selections).map((e, i) => e === '' ? emptyAnswer : e === answer[i] ? correctAnswer : wrongAnswer);
+        var total = scores.reduce((a, b) => a + b, 0)
+        setTotalScore(total);
+        setGraded(true);
+      }
+      )
+    }
+  }, [contestName]);
 
   React.useEffect(() => {
     if (contestName) {
@@ -169,7 +225,11 @@ export default function App() {
         if (cookies.hasOwnProperty(contestName)) {
           setSelections(cookies[contestName]);
         } else {
-          setSelections(results.map((e: ProblemDict, i: number) => -1));
+          // setSelections(results.map((e: ProblemDict, i: number) => -1));
+          setSelections(results.reduce((acc: { [key: string]: number }, element: any, index: number) => {
+            acc[index.toString()] = -1;
+            return acc
+          }, ({} as { [key: string]: number })));
         }
         setProblemContentArray(results);
         setRefs(results.map(
@@ -260,7 +320,7 @@ export default function App() {
             {contestName.replace(/_/g, ' ')}
           </Typography>
 
-          <Timer max_secs={4500} timerRunning={timerRunning} contestName={contestName} />
+          <Timer max_secs={10} timerRunning={timerRunning} contestName={contestName} turnOffTimer={turnOffTimer} />
         </Toolbar>
       </AppBar>
       <Drawer
@@ -290,6 +350,8 @@ export default function App() {
       <main className={classes.content}>
         <Toolbar />
         {
+          // needs to prerender due to latex rerendering
+          // looks messy if renders and latex rerenders after changing problem
           problemContentArray.map((problemDict, i) => (
             <Box className={i === currentSelection - 1 && timerRunning ? '' : 'hidden'} key={i}>
               <Typography variant='h5' align='center' className={classes.header}>Problem {i + 1}</Typography>
@@ -297,6 +359,7 @@ export default function App() {
               <Choices handleChange={handleChoiceSelection(currentSelection - 1)} selectedValue={selections[currentSelection - 1]} choices={problemDict.choices} />
             </Box>
           ))
+          // <Problem currentSelection={currentSelection} problemDict={problemContentArray[currentSelection - 1]} selections={selections} handleChoiceSelection={handleChoiceSelection} />
         }
         {
           // <Typography variant='h5' align='center' className={classes.header}>{currentTitle}</Typography>
@@ -308,13 +371,63 @@ export default function App() {
             <ContestListSelector contestList={availableContests} setContestName={setContestName} disabled={timerRunning} />
           </Box>
           <Box m={2}>
-            <Button variant="contained" color="primary" onClick={() => handleButtonClick(timerRunning, contestName)} > {buttonText} </Button>
-          </Box>
-          <Box m={2}>
-            <Button variant="contained" color="primary" onClick={clearCache} > Clear </Button>
+            <Button variant="contained" color="primary" onClick={() => handleButtonClick(timerRunning, contestName, selections)}
+              className={classes.paddie}> {buttonText} </Button>
+            {// </Box>
+              // <Box m={2}>
+            }
+            <Button variant="contained" color="primary" onClick={clearCache} className={classes.paddie}> Clear </Button>
+            {
+              // </Box>
+              // <Box m={2}>
+            }
+            <Button variant="contained" color="primary" onClick={grade} className={classes.paddie}> Grade </Button>
           </Box>
         </Box>
+        <Box className={currentSelection === 0 && graded ? 'App' : 'App hidden'}>
+          <Box m={2}>
+            <Typography variant='h5' align='center' className={classes.header}> Score: {totalScore} </Typography>
+          </Box>
+          <Grid container spacing={2}>
+            <Grid item xs={12}>
+              <Grid container justify='center' spacing={2}>
+                <Grid item xs={2}>
+                  <Typography></Typography>
+                </Grid>
+                <Grid item xs={2}>
+                  <Typography >Response</Typography>
+                </Grid>
+                <Grid item xs={2}>
+                  <Typography >Answer</Typography>
+                </Grid>
+              </Grid>
+            </Grid>
+
+            <Grid item xs={12}>
+
+              <Grid container spacing={2}>
+                {
+                  convertSelections(selections).map((selection, i) => (
+                    <Grid item xs={12} key={i}>
+                      <Grid container justify='center' spacing={2}>
+                        <Grid item xs={2}>
+                          <Typography color={selection === "" ? "primary" : selection === answers[i] ? 'initial' : 'secondary'}> {i + 1} </Typography>
+                        </Grid>
+                        <Grid item xs={2}>
+                          <Typography color={selection === "" ? "primary" : selection === answers[i] ? 'initial' : 'secondary'}> {selection || "_"} </Typography>
+                        </Grid>
+                        <Grid item xs={2}>
+                          <Typography color={selection === "" ? "primary" : selection === answers[i] ? 'initial' : 'secondary'}> {answers[i]} </Typography>
+                        </Grid>
+                      </Grid>
+                    </Grid>
+                  ))
+                }
+              </Grid>
+            </Grid>
+          </Grid>
+        </Box>
       </main>
-    </div>
+    </div >
   );
 }

@@ -10,3 +10,4 @@ db.Model.metadata.reflect(db.engine)
 migrate = Migrate(app, db)
 
 from app import routes, models
+db.create_all(bind='response')
