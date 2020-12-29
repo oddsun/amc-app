@@ -25,6 +25,7 @@ import ContestListSelector from './ContestListSelector';
 import UserSelector from './UserSelector';
 import ProblemAndChoices from './ProblemAndChoices';
 import ListItemMemo from './ListItemMemo';
+import Hidden from '@material-ui/core/Hidden';
 
 
 const drawerWidth = 280;
@@ -426,6 +427,7 @@ export default function App() {
           <Timer max_secs={4500} timerRunning={timerRunning} contestName={contestName} turnOffTimer={turnOffTimer} cleared={cleared}/>
         </Toolbar>
       </AppBar>
+      <Hidden xsDown>
       <Drawer
         className={classes.drawer}
         variant="permanent"
@@ -451,6 +453,7 @@ export default function App() {
           </List>
         </div>
       </Drawer>
+      </Hidden>
       <main className={classes.content}>
         <Toolbar />
         {
