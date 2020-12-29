@@ -275,6 +275,7 @@ export default function App() {
         acc[index.toString()] = -1;
         return acc
       }, ({} as { [key: string]: number })));
+      setGraded(false);
     }
   }, [contestName, problemContentArray, removeCookies]);
 
@@ -453,7 +454,7 @@ export default function App() {
           // needs to prerender due to latex rerendering
           // looks messy if renders and latex rerenders after changing problem
           problemContentArray.map((problemDict, i) => (
-            <ProblemAndChoices visible={i === currentSelection - 1 && timerRunning} i={i} problem={problemDict.problem} handleChoiceSelection={arrayOfHandleChoiceSelection[i]} selection={selections[i]} choices={problemDict.choices} key={i} />
+            <ProblemAndChoices visible={i === currentSelection - 1 && (timerRunning || graded)} i={i} problem={problemDict.problem} handleChoiceSelection={arrayOfHandleChoiceSelection[i]} selection={selections[i]} choices={problemDict.choices} key={i} />
           ))
           // <Box className={i === currentSelection - 1 && timerRunning ? '' : 'hidden'} key={i}>
           //   <Typography variant='h5' align='center' className={classes.header}>Problem {i + 1}</Typography>
