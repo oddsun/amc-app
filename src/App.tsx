@@ -108,6 +108,7 @@ export default function App() {
   // const [currentTitle, setCurrentTitle] = React.useState('');
   const [timerRunning, setTimerRunning] = React.useState(false);
   const [timerWasRunning, setTimerWasRunning] = React.useState(false);
+  const [cleared, setCleared] = React.useState(false);
   const [graded, setGraded] = React.useState(false);
   const [userList, setUserList] = React.useState<UserOptionType[]>([]);
   const [currentUser, setCurrentUser] = React.useState('');
@@ -255,6 +256,7 @@ export default function App() {
       setCurrentSelection(1);
       setButtonText('Submit');
       setGraded(false);
+      setCleared(false);
     } else {
       // updating timerRunning calls useEffect and cleans up previous call
       // via the returned method (i.e. clearInterval), i.e. stopping the timer
@@ -267,7 +269,7 @@ export default function App() {
 
 
   const clearCache = React.useCallback(() => {
-    if (contestName) {
+    if (contestName && !timerRunning) {
       removeCookies(contestName, { path: '/' });
       removeCookies(`${contestName}-time`, { path: '/' });
       // setSelections(problemContentArray.map((e: ProblemDict, i: number) => -1));
@@ -276,8 +278,9 @@ export default function App() {
         return acc
       }, ({} as { [key: string]: number })));
       setGraded(false);
+      setCleared(true);
     }
-  }, [contestName, problemContentArray, removeCookies]);
+  }, [contestName, problemContentArray, removeCookies, timerRunning]);
 
   // React.useEffect(() => {
   //   setContestName('2019_AMC_12B');
@@ -420,7 +423,7 @@ export default function App() {
             {contestName.replace(/_/g, ' ')}
           </Typography>
 
-          <Timer max_secs={4500} timerRunning={timerRunning} contestName={contestName} turnOffTimer={turnOffTimer} />
+          <Timer max_secs={4500} timerRunning={timerRunning} contestName={contestName} turnOffTimer={turnOffTimer} cleared={cleared}/>
         </Toolbar>
       </AppBar>
       <Drawer
