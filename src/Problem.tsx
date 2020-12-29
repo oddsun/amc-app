@@ -5,4 +5,4 @@ function Problem(props: { problem: string }) {
   return (<Typography dangerouslySetInnerHTML={{ __html: props.problem }} ></Typography>);
 }
 
-export default Problem;
+export default React.memo(Problem);

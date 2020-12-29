@@ -23,7 +23,9 @@ import Choices from './Choices';
 import { useCookies } from 'react-cookie';
 import ContestListSelector from './ContestListSelector';
 import UserSelector from './UserSelector';
-// import Problem from './Problem';
+import ProblemAndChoices from './ProblemAndChoices';
+import ListItemMemo from './ListItemMemo';
+
 
 const drawerWidth = 280;
 
@@ -112,8 +114,14 @@ export default function App() {
   // const [startTime, setStartTIme] = React.useState(0);
   // const [hidden, setHidden] = React.useState(false);
   const handleListItemClick = React.useCallback((index: number) => {
-    setCurrentSelection(index);
+    return () => setCurrentSelection(index);
   }, []);
+
+  const handleListItemClickMain = React.useMemo(() => handleListItemClick(0), [])
+
+  const arrayHandleListItemClick = React.useMemo(() => {
+    return problemContentArray.map((e, i) => handleListItemClick(i + 1));
+  }, [problemContentArray])
   // const refs = React.useMemo<React.RefObject<HTMLDivElement>[]>(() => problemContentArray.map(
   //   (e, i) => React.createRef()
   // ), [problemContentArray]);
@@ -122,6 +130,18 @@ export default function App() {
   //   fetch(`/api/available_contests`).then(res => res.json()).then(data => data.available_contests
   //   )
   // }, []);
+
+  const convertSelections = React.useCallback((selections: { [key: string]: number }) => {
+    if (timerRunning) {
+      // console.log(`timerRunning ${timerRunning}`)
+      // console.log(`timerWasRunning ${timerWasRunning}`)
+      return []
+    }
+    // console.log(Object.keys(selections).sort((a, b) => parseInt(a) - parseInt(b)))
+    return Object.keys(selections).sort((a, b) => parseInt(a) - parseInt(b)).map(key => selections[key] === -1 ? '' : String.fromCharCode(65 + selections[key]))
+  }, [timerRunning]);
+
+
   const getUserList = React.useCallback(() => {
     fetch('/api/users').then(res => res.json()).then(data => { setUserList(data.results) }
     );
@@ -165,7 +185,7 @@ export default function App() {
       })
     };
     fetch('/api/response', postData);
-  }, [])
+  }, [convertSelections])
 
   React.useEffect(() => {
     if (currentSelection > 0 && timerRunning) {
@@ -180,10 +200,6 @@ export default function App() {
     getUserList();
   }, [getUserList])
 
-
-  const convertSelections = React.useCallback((selections: { [key: string]: number }) => {
-    return Object.keys(selections).sort().map(key => selections[key] === -1 ? '' : String.fromCharCode(65 + selections[key]))
-  }, []);
 
   // const renderContent = () => {
   //   if (currentSelection) {
@@ -215,11 +231,16 @@ export default function App() {
     }
   }, []);
 
+  const arrayOfHandleChoiceSelection = React.useMemo(() => {
+    // console.log('creating function');
+    return problemContentArray.map((e, i) => handleChoiceSelection(i));
+  }, [problemContentArray]);
+
 
   const turnOffTimer = React.useCallback(() => {
     setTimerRunning(false);
     setButtonText('Start');
-  }, [contestName, currentUser])
+  }, [])
 
 
 
@@ -227,7 +248,7 @@ export default function App() {
     // console.log('clicked')
     // console.log(timerRunning)
     // console.log(contestName)
-    if ((!timerRunning) && contestName !== '') {
+    if ((!timerRunning) && contestName !== '' && currentUser !== '') {
       // setStartTime(new Date().getTime());
       setTimerRunning(true);
       setTimerWasRunning(true);
@@ -242,7 +263,7 @@ export default function App() {
       turnOffTimer();
       // console.log(handleSubmit(selections))
     }
-  }, [turnOffTimer]);
+  }, [turnOffTimer, currentUser]);
 
 
   const clearCache = React.useCallback(() => {
@@ -265,7 +286,9 @@ export default function App() {
     if (contestName) {
       fetch(`/api/answer/${contestName}`).then(res => res.json()).then(data => {
         var answer = data.results;
-        setAnswers(answer);
+        setAnswers(oldAnswers => answer);
+        // console.log(answers)
+        console.log(convertSelections(selections))
         var scores = convertSelections(selections).map((e, i) => e === '' ? emptyAnswer : e === answer[i] ? correctAnswer : wrongAnswer);
         var total = scores.reduce((a, b) => a + b, 0)
         setTotalScore(total);
@@ -308,19 +331,21 @@ export default function App() {
         setRefs(results.map(
           () => React.createRef()
         ));
+        setGraded(false);
       });
     }
   }, [contestName]);
 
-  React.useEffect(() => {
-    if (currentSelection > 0 && currentSelection < refs.length) {
-      var rect = refs[currentSelection - 1] ?.current ?.getBoundingClientRect();
-      var viewHeight = Math.max(document.documentElement.clientHeight, window.innerHeight);
-      if ((rect as DOMRect).top < 64 || (rect as DOMRect).top - viewHeight >= 0) {
-        refs[currentSelection - 1] ?.current ?.scrollIntoView();
-      }
-    }
-  }, [currentSelection, refs])
+  // React.useEffect(() => {
+  //   if (currentSelection > 0 && currentSelection < refs.length) {
+  //     var rect = refs[currentSelection - 1] ?.current ?.getBoundingClientRect();
+  //     console.log(refs[currentSelection - 1] ?.current)
+  //     var viewHeight = Math.max(document.documentElement.clientHeight, window.innerHeight);
+  //     if ((rect as DOMRect).top < 64 || (rect as DOMRect).top - viewHeight >= 0) {
+  //       refs[currentSelection - 1] ?.current ?.scrollIntoView();
+  //     }
+  //   }
+  // }, [currentSelection, refs])
 
   // React.useEffect(() => {
   //   // if (refs != null && refs[currentSelection - 1].current) {
@@ -384,12 +409,13 @@ export default function App() {
 
   // <Typography variant='h5' align='center' className={classes.header}>Problems</Typography>
   // <Divider />
+  // TODO: incorrect answer is displayed after changing to contest with more answers
   return (
     <div className={classes.root}>
       <CssBaseline />
       <AppBar position="fixed" className={classes.appBar}>
         <Toolbar className={classes.spreadOut}>
-          <Typography variant="h3" noWrap onClick={() => handleListItemClick(0)}>
+          <Typography variant="h3" noWrap onClick={handleListItemClickMain}>
             {contestName.replace(/_/g, ' ')}
           </Typography>
 
@@ -407,15 +433,16 @@ export default function App() {
         <div className={classes.drawerContainer}>
           <List>
             {problemContentArray.map((content, index) => (
-              <ListItem ref={refs[index]} key={index + 1} divider button onClick={() => handleListItemClick(index + 1)}
-                className={index + 1 === currentSelection ? classes.borderHighlight : ''}
-              // selected={text === currentSelection} classes={{
-              //   selected: classes.borderHighlight,
-              // }}
-              >
-                <ListItemText primary={index + 1} />
-                <RadioButtons selectedValue={selections[index]} />
-              </ListItem>
+              <ListItemMemo index={index} key={index} selected={index + 1 === currentSelection} selection={selections[index]} handleListItemClick={arrayHandleListItemClick[index]} />
+              // <ListItem ref={refs[index]} key={index + 1} divider button onClick={() => handleListItemClick(index + 1)}
+              //   className={index + 1 === currentSelection ? classes.borderHighlight : ''}
+              // // selected={text === currentSelection} classes={{
+              // //   selected: classes.borderHighlight,
+              // // }}
+              // >
+              //   <ListItemText primary={index + 1} />
+              //   <RadioButtons selectedValue={selections[index]} />
+              // </ListItem>
             ))}
           </List>
         </div>
@@ -426,12 +453,15 @@ export default function App() {
           // needs to prerender due to latex rerendering
           // looks messy if renders and latex rerenders after changing problem
           problemContentArray.map((problemDict, i) => (
-            <Box className={i === currentSelection - 1 && timerRunning ? '' : 'hidden'} key={i}>
-              <Typography variant='h5' align='center' className={classes.header}>Problem {i + 1}</Typography>
-              <Typography dangerouslySetInnerHTML={{ __html: problemDict.problem }} ></Typography>
-              <Choices handleChange={handleChoiceSelection(currentSelection - 1)} selectedValue={selections[currentSelection - 1]} choices={problemDict.choices} />
-            </Box>
+            <ProblemAndChoices visible={i === currentSelection - 1 && timerRunning} i={i} problem={problemDict.problem} handleChoiceSelection={arrayOfHandleChoiceSelection[i]} selection={selections[i]} choices={problemDict.choices} key={i} />
           ))
+          // <Box className={i === currentSelection - 1 && timerRunning ? '' : 'hidden'} key={i}>
+          //   <Typography variant='h5' align='center' className={classes.header}>Problem {i + 1}</Typography>
+          //
+          //   <Problem problem={problemDict.problem} />
+          //   <Choices handleChange={handleChoiceSelection(i)} selectedValue={selections[currentSelection - 1]} choices={problemDict.choices} />
+          // </Box>
+          // <Typography dangerouslySetInnerHTML={{ __html: problemDict.problem }} ></Typography>
           // <Problem currentSelection={currentSelection} problemDict={problemContentArray[currentSelection - 1]} selections={selections} handleChoiceSelection={handleChoiceSelection} />
         }
         {
@@ -441,10 +471,10 @@ export default function App() {
         }
         <Box className={currentSelection === 0 ? 'App' : 'App hidden'}>
           <Box m={2}>
-            <ContestListSelector contestList={availableContests} setContestName={setContestName} disabled={timerRunning} />
+            <UserSelector userList={userList} setUserName={addSetCurrentUser} disabled={timerRunning} />
           </Box>
           <Box m={2}>
-            <UserSelector userList={userList} setUserName={addSetCurrentUser} disabled={timerRunning} />
+            <ContestListSelector contestList={availableContests} setContestName={setContestName} disabled={timerRunning} />
           </Box>
           <Box m={2}>
             <Button variant="contained" color="primary" onClick={() => handleButtonClick(timerRunning, contestName, selections)}
@@ -457,7 +487,7 @@ export default function App() {
               // </Box>
               // <Box m={2}>
             }
-            <Button variant="contained" color="primary" onClick={grade} className={classes.paddie}> Grade </Button>
+            <Button variant="contained" color="primary" onClick={() => grade(selections)} className={classes.paddie}> Grade </Button>
           </Box>
         </Box>
         <Box className={currentSelection === 0 && graded ? 'App' : 'App hidden'}>

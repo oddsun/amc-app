@@ -16,7 +16,7 @@ const useStyles = makeStyles((theme: Theme) =>
 );
 
 
-export default function Choices(props: { selectedValue: number, choices: string[], handleChange: (event: React.ChangeEvent<HTMLInputElement>) => void }) {
+function Choices(props: { selectedValue: number, choices: string[], handleChange: (event: React.ChangeEvent<HTMLInputElement>) => void }) {
 
   const classes = useStyles();
   const { selectedValue, choices, handleChange } = props;
@@ -34,3 +34,5 @@ export default function Choices(props: { selectedValue: number, choices: string[
     </Box>
   );
 }
+
+export default React.memo(Choices)

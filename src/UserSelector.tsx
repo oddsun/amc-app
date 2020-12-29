@@ -27,7 +27,7 @@ export default function UserSelector(props: { disabled: boolean, userList: UserO
         }
       }}
       style={{ width: 300 }}
-      renderInput={(params) => <TextField {...params} label="Choose User" variant="outlined" />}
+      renderInput={(params) => <TextField {...params} label="Choose User" variant="outlined" required />}
       disabled={props.disabled}
       filterOptions={(options, params) => {
         const filtered = filter(options, params);

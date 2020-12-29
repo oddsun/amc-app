@@ -14,7 +14,7 @@ import Radio from '@material-ui/core/Radio';
 //   checked: {},
 // })((props: RadioProps) => <Radio color="default" {...props} />);
 
-export default function RadioButtons(props: { selectedValue: number }) {
+function RadioButtons(props: { selectedValue: number }) {
   // const [selectedValue, setSelectedValue] = React.useState('a');
   //
   // const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -39,3 +39,5 @@ export default function RadioButtons(props: { selectedValue: number }) {
     </div>
   );
 }
+
+export default React.memo(RadioButtons);

@@ -1,18 +1,30 @@
 import React from 'react';
 import { Box, Typography } from '@material-ui/core';
 import Choices from './Choices';
+import Problem from './Problem';
 
-export default function Problem(props: { currentSelection: number, problemDict: { problem: string, choices: string[] }, selections: number[], handleChoiceSelection: (i: number) => ((event: React.ChangeEvent<HTMLInputElement>) => void) }) {
-  const { currentSelection, problemDict, selections, handleChoiceSelection } = props;
-  if (currentSelection > 0) {
-    return (
-      <Box>
-        <Typography variant='h5' align='center' className="header">Problem {currentSelection}</Typography>
-        <Typography dangerouslySetInnerHTML={{ __html: problemDict.problem }} ></Typography>
-        <Choices handleChange={handleChoiceSelection(currentSelection - 1)} selectedValue={selections[currentSelection - 1]} choices={problemDict.choices} />
-      </Box >
-    );
-  } else {
-    return null;
-  }
+import { createStyles, Theme, makeStyles } from '@material-ui/core/styles';
+
+const useStyles = makeStyles((theme: Theme) =>
+  createStyles({
+    header: {
+      padding: theme.spacing(1),
+    },
+  }),
+);
+
+function ProblemAndChoices(props: { visible: boolean, i: number, problem: string, handleChoiceSelection: (event: React.ChangeEvent<HTMLInputElement>) => void, choices: string[], selection: number }) {
+  const classes = useStyles();
+  // console.log(props)
+  return (
+    <Box className={props.visible ? '' : 'hidden'}>
+      <Typography variant='h5' align='center' className={classes.header}>Problem {props.i + 1}</Typography>
+
+      <Problem problem={props.problem} />
+      <Choices handleChange={props.handleChoiceSelection} selectedValue={props.selection} choices={props.choices} />
+    </Box>
+  );
 }
+
+
+export default React.memo(ProblemAndChoices);
