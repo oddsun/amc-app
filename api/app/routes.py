@@ -37,6 +37,8 @@ def problems(contest_name):
         # problem.choices = ast.literal_eval(problem.choices)
         if problem.choices != 'null':
             problem.choices = [chr(i + ord('A')) + '. ' + choice for i, choice in enumerate(ast.literal_eval(problem.choices))]
+            if 'amc' in contest_name.lower() and len(problem.choices)<5:
+                problem.choices = problem.choices + [chr(i + ord('A')) for i in range(len(problem.choices), 5)]
         else:
             problem.choices = [chr(i + ord('A')) for i in range(5)]
         problem.problem = problem.problem.replace('$$', r'\$$')
