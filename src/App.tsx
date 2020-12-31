@@ -293,7 +293,7 @@ export default function App() {
         var answer = data.results;
         setAnswers(oldAnswers => answer);
         // console.log(answers)
-        console.log(convertSelections(selections))
+        // console.log(convertSelections(selections))
         var scores = convertSelections(selections).map((e, i) => e === '' ? emptyAnswer : e === answer[i] ? correctAnswer : wrongAnswer);
         var total = scores.reduce((a, b) => a + b, 0)
         setTotalScore(total);
