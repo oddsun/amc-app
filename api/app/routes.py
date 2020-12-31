@@ -11,21 +11,21 @@ import ast
 #     return render_template('index.html', title='Home', user=user)
 
 
-@app.route('/api/problem/<contest_name>/<id>')
-def problem(contest_name, id):
-    id_0 = int(id) - 1
-    contest_name = contest_name.replace('_', ' ')
-    problem = Problem.query.filter_by(contest_name=contest_name, id=id_0).first_or_404()
-    problem.problem = problem.problem.replace('static/data/imgs', '/static/data/imgs').replace('<img', '<br/><br/><img')
-    # problem.choices = ast.literal_eval(problem.choices)
-    if problem.choices != 'null':
-        problem.choices = [chr(i + ord('A')) + '. ' + choice for i, choice in enumerate(ast.literal_eval(problem.choices))]
-    else:
-        problem.choices = [chr(i + ord('A')) for i in range(5)]
-    problem.problem = problem.problem.replace('$$', r'\$$')
-    # return render_template('problem.html', id=id, problem=problem)
-    # print(type(problem.problem))
-    return {'problem' : problem.problem, 'choices': problem.choices}
+# @app.route('/api/problem/<contest_name>/<id>')
+# def problem(contest_name, id):
+#     id_0 = int(id) - 1
+#     contest_name = contest_name.replace('_', ' ')
+#     problem = Problem.query.filter_by(contest_name=contest_name, id=id_0).first_or_404()
+#     problem.problem = problem.problem.replace('static/data/imgs', '/static/data/imgs').replace('<img', '<br/><br/><img')
+#     # problem.choices = ast.literal_eval(problem.choices)
+#     if problem.choices != 'null':
+#         problem.choices = [chr(i + ord('A')) + '. ' + choice for i, choice in enumerate(ast.literal_eval(problem.choices))]
+#     else:
+#         problem.choices = [chr(i + ord('A')) for i in range(5)]
+#     problem.problem = problem.problem.replace('$$', r'\$$')
+#     # return render_template('problem.html', id=id, problem=problem)
+#     # print(type(problem.problem))
+#     return {'problem' : problem.problem, 'choices': problem.choices}
 
 @app.route('/api/problem/<contest_name>')
 def problems(contest_name):
@@ -35,7 +35,7 @@ def problems(contest_name):
     for problem in problems:
         problem.problem = problem.problem.replace('static/data/imgs', '/static/data/imgs').replace('<img', '<br/><br/><img')
         # problem.choices = ast.literal_eval(problem.choices)
-        if problem.choices != 'null':
+        if problem.choices not in ['null', '[]']:
             problem.choices = [chr(i + ord('A')) + '. ' + choice for i, choice in enumerate(ast.literal_eval(problem.choices))]
             if 'amc' in contest_name.lower() and len(problem.choices)<5:
                 problem.choices = problem.choices + [chr(i + ord('A')) for i in range(len(problem.choices), 5)]
