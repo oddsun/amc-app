@@ -29,6 +29,7 @@ import ast
 
 @app.route('/api/problem/<contest_name>')
 def problems(contest_name):
+    # TODO: AIME choices
     contest_name = contest_name.replace('_', ' ')
     problems = Problem.query.filter_by(contest_name=contest_name).all()
     # print(problems)
@@ -42,6 +43,16 @@ def problems(contest_name):
         else:
             problem.choices = [chr(i + ord('A')) for i in range(5)]
         problem.problem = problem.problem.replace('$$', r'\$$')
+        # not necessary if we are dangerously setting html
+        problem.problem = problem.problem.replace('&gt;', r'\gt ').replace('&lt;', r'\lt ')
+        problem.choices = [x.replace('&gt;', r'\gt ').replace('&lt;', r'\lt ') for x in problem.choices]
+        # fix tabular (should replace with img in scraping)
+        problem.problem = problem.problem.replace('\\(\\begin{tabular}', '\\[\\begin{array}').replace('\\end{tabular}\\)', '\\end{array}\\]')
+
+        # put choices in problems if images in choices
+        if any('<img' in choice for choice in problem.choices):
+            problem.problem += '<br/>' + '\\(\qquad\\)'.join(problem.choices)
+            # problem.choices = [chr(i + ord('A')) for i in range(5)]
     # return render_template('problem.html', id=id, problem=problem)
     # print(type(problems[0].problem))
     return {'results': sorted(({'problem' : problem.problem, 'choices': problem.choices, 'id':problem.id} for problem in problems), key=lambda x: x['id'])}
