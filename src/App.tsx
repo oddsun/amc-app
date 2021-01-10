@@ -1,45 +1,44 @@
-import './App.css';
-import Drawer from '@material-ui/core/Drawer';
-import AppBar from '@material-ui/core/AppBar';
-import Timer from './Timer';
-import React from 'react';
-import { createStyles, Theme, makeStyles } from '@material-ui/core/styles';
-import CssBaseline from '@material-ui/core/CssBaseline';
-import Toolbar from '@material-ui/core/Toolbar';
-import List from '@material-ui/core/List';
-import Typography from '@material-ui/core/Typography';
-import Grid from '@material-ui/core/Grid';
+import "./App.css";
+import Drawer from "@material-ui/core/Drawer";
+import AppBar from "@material-ui/core/AppBar";
+import Timer from "./Timer";
+import React from "react";
+import { createStyles, Theme, makeStyles } from "@material-ui/core/styles";
+import CssBaseline from "@material-ui/core/CssBaseline";
+import Toolbar from "@material-ui/core/Toolbar";
+import List from "@material-ui/core/List";
+import Typography from "@material-ui/core/Typography";
+import Grid from "@material-ui/core/Grid";
 // import Divider from '@material-ui/core/Divider';
-import ListItem from '@material-ui/core/ListItem';
+import ListItem from "@material-ui/core/ListItem";
 // import ListItemIcon from '@material-ui/core/ListItemIcon';
-import ListItemText from '@material-ui/core/ListItemText';
+import ListItemText from "@material-ui/core/ListItemText";
 // import InboxIcon from '@material-ui/icons/MoveToInbox';
 // import MailIcon from '@material-ui/icons/Mail';
-import RadioButtons from './RadioButtons';
+import RadioButtons from "./RadioButtons";
 // import MathJaxScript from './MathJax';
-import Button from '@material-ui/core/Button';
-import Box from '@material-ui/core/Box';
-import Choices from './Choices';
-import { useCookies } from 'react-cookie';
-import ContestListSelector from './ContestListSelector';
-import UserSelector from './UserSelector';
-import ProblemAndChoices from './ProblemAndChoices';
-import ListItemMemo from './ListItemMemo';
-import Hidden from '@material-ui/core/Hidden';
-
+import Button from "@material-ui/core/Button";
+import Box from "@material-ui/core/Box";
+import Choices from "./Choices";
+import { useCookies } from "react-cookie";
+import ContestListSelector from "./ContestListSelector";
+import UserSelector from "./UserSelector";
+import ProblemAndChoices from "./ProblemAndChoices";
+import ListItemMemo from "./ListItemMemo";
+import Hidden from "@material-ui/core/Hidden";
 
 const drawerWidth = 280;
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
     root: {
-      display: 'flex',
+      display: "flex",
     },
     appBar: {
       zIndex: theme.zIndex.drawer + 1,
     },
     spreadOut: {
-      justifyContent: 'space-between',
+      justifyContent: "space-between",
     },
     drawer: {
       width: drawerWidth,
@@ -49,13 +48,13 @@ const useStyles = makeStyles((theme: Theme) =>
       width: drawerWidth,
     },
     drawerContainer: {
-      overflow: 'auto',
+      overflow: "auto",
     },
     content: {
       flexGrow: 1,
       padding: theme.spacing(3),
-      overflow: 'auto',
-      height: '100vh',
+      overflow: "auto",
+      height: "100vh",
     },
     header: {
       padding: theme.spacing(1),
@@ -65,13 +64,12 @@ const useStyles = makeStyles((theme: Theme) =>
     },
     borderHighlight: {
       borderWidth: 1,
-      borderStyle: 'solid',
+      borderStyle: "solid",
       borderColor: theme.palette.secondary.main,
-      width: '100%',
-    }
-  }),
+      width: "100%",
+    },
+  })
 );
-
 
 const correctAnswer: number = 6;
 const emptyAnswer: number = 1.5;
@@ -87,22 +85,26 @@ export default function App() {
   const [cookies, setCookies, removeCookies] = useCookies();
 
   interface ProblemDict {
-    problem: string,
-    choices: string[],
-    id: number
+    problem: string;
+    choices: string[];
+    id: number;
   }
 
   // const [numProblems, setNumProblems] = React.useState('');
-  const [contestName, setContestName] = React.useState('');
-  const [buttonText, setButtonText] = React.useState('Start');
+  const [contestName, setContestName] = React.useState("");
+  const [buttonText, setButtonText] = React.useState("Start");
   // const [problemIDs, setProblemIDs] = React.useState<number[]>([]);
   // TODO: slow for long contest
   // const [selections, setSelections] = React.useState<number[]>([]);
-  const [selections, setSelections] = React.useState<{ [key: string]: number }>({});
+  const [selections, setSelections] = React.useState<{ [key: string]: number }>(
+    {}
+  );
   const [answers, setAnswers] = React.useState<string[]>([]);
   const [totalScore, setTotalScore] = React.useState(0);
   const [availableContests, setAvailableContests] = React.useState([]);
-  const [problemContentArray, setProblemContentArray] = React.useState<ProblemDict[]>([]);
+  const [problemContentArray, setProblemContentArray] = React.useState<
+    ProblemDict[]
+  >([]);
   // const [problemContent, setProblemContent] = React.useState('');
   // const [problemChoices, setProblemChoices] = React.useState<string[]>([]);
   const [currentSelection, setCurrentSelection] = React.useState(0);
@@ -112,18 +114,21 @@ export default function App() {
   const [cleared, setCleared] = React.useState(false);
   const [graded, setGraded] = React.useState(false);
   const [userList, setUserList] = React.useState<UserOptionType[]>([]);
-  const [currentUser, setCurrentUser] = React.useState('');
+  const [currentUser, setCurrentUser] = React.useState("");
   // const [startTime, setStartTIme] = React.useState(0);
   // const [hidden, setHidden] = React.useState(false);
   const handleListItemClick = React.useCallback((index: number) => {
     return () => setCurrentSelection(index);
   }, []);
 
-  const handleListItemClickMain = React.useMemo(() => handleListItemClick(0), [])
+  const handleListItemClickMain = React.useMemo(
+    () => handleListItemClick(0),
+    []
+  );
 
   const arrayHandleListItemClick = React.useMemo(() => {
     return problemContentArray.map((e, i) => handleListItemClick(i + 1));
-  }, [problemContentArray])
+  }, [problemContentArray]);
   // const refs = React.useMemo<React.RefObject<HTMLDivElement>[]>(() => problemContentArray.map(
   //   (e, i) => React.createRef()
   // ), [problemContentArray]);
@@ -133,75 +138,103 @@ export default function App() {
   //   )
   // }, []);
 
-  const convertSelections = React.useCallback((selections: { [key: string]: number }) => {
-    if (timerRunning) {
-      // console.log(`timerRunning ${timerRunning}`)
-      // console.log(`timerWasRunning ${timerWasRunning}`)
-      return []
-    }
-    // console.log(Object.keys(selections).sort((a, b) => parseInt(a) - parseInt(b)))
-    return Object.keys(selections).sort((a, b) => parseInt(a) - parseInt(b)).map(key => selections[key] === -1 ? '' : String.fromCharCode(65 + selections[key]))
-  }, [timerRunning]);
-
+  const convertSelections = React.useCallback(
+    (selections: { [key: string]: number }) => {
+      if (timerRunning) {
+        // console.log(`timerRunning ${timerRunning}`)
+        // console.log(`timerWasRunning ${timerWasRunning}`)
+        return [];
+      }
+      // console.log(Object.keys(selections).sort((a, b) => parseInt(a) - parseInt(b)))
+      return Object.keys(selections)
+        .sort((a, b) => parseInt(a) - parseInt(b))
+        .map((key) =>
+          selections[key] === -1
+            ? ""
+            : String.fromCharCode(65 + selections[key])
+        );
+    },
+    [timerRunning]
+  );
 
   const getUserList = React.useCallback(() => {
-    fetch('/api/users').then(res => res.json()).then(data => { setUserList(data.results) }
-    );
+    fetch("/api/users")
+      .then((res) => res.json())
+      .then((data) => {
+        setUserList(data.results);
+      });
   }, []);
 
   const addUser = React.useCallback((user_name) => {
-    fetch(`/api/adduser/${user_name}`).then(res => res.json()).then(data => { if (data.results) { setUserList(data.results) } }
-    );
+    fetch(`/api/adduser/${user_name}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.results) {
+          setUserList(data.results);
+        }
+      });
   }, []);
 
-  const addSetCurrentUser = React.useCallback((user_name) => {
-    const found = userList.some(el => el.name === user_name)
-    if (!found) {
-      addUser(user_name);
-    }
-    setCurrentUser(user_name);
-  }, [userList, addUser]);
+  const addSetCurrentUser = React.useCallback(
+    (user_name) => {
+      const found = userList.some((el) => el.name === user_name);
+      if (!found) {
+        addUser(user_name);
+      }
+      setCurrentUser(user_name);
+    },
+    [userList, addUser]
+  );
 
-  const recordTime = React.useCallback((contestName, currentSelection, entry_type, currentUser) => {
-    const postData = {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        user_name: currentUser,
-        problem_id: currentSelection,
-        entry_type: entry_type,
-        contest_name: contestName
-      })
-    };
-    fetch('/api/response_time', postData);
-  }, [])
+  const recordTime = React.useCallback(
+    (contestName, currentSelection, entry_type, currentUser) => {
+      const postData = {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          user_name: currentUser,
+          problem_id: currentSelection,
+          entry_type: entry_type,
+          contest_name: contestName,
+        }),
+      };
+      fetch("/api/response_time", postData);
+    },
+    []
+  );
 
-  const recordResponse = React.useCallback((contestName, selections, currentUser) => {
-    const postData = {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        user_name: currentUser,
-        contest_name: contestName,
-        response: convertSelections(selections)
-      })
-    };
-    fetch('/api/response', postData);
-  }, [convertSelections])
+  const recordResponse = React.useCallback(
+    (contestName, selections, currentUser) => {
+      const postData = {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          user_name: currentUser,
+          contest_name: contestName,
+          response: convertSelections(selections),
+        }),
+      };
+      fetch("/api/response", postData);
+    },
+    [convertSelections]
+  );
 
   React.useEffect(() => {
     if (currentSelection > 0 && timerRunning) {
-      recordTime(contestName, currentSelection, 'enter', currentUser);
-      return () => recordTime(contestName, currentSelection, 'exit', currentUser);
+      recordTime(contestName, currentSelection, "enter", currentUser);
+      return () =>
+        recordTime(contestName, currentSelection, "exit", currentUser);
     }
-  }, [currentSelection, recordTime, timerRunning, contestName, currentUser])
+  }, [currentSelection, recordTime, timerRunning, contestName, currentUser]);
 
   React.useEffect(() => {
-    fetch(`/api/available_contests`).then(res => res.json()).then(data => { setAvailableContests(data.available_contests) }
-    );
+    fetch(`/api/available_contests`)
+      .then((res) => res.json())
+      .then((data) => {
+        setAvailableContests(data.available_contests);
+      });
     getUserList();
-  }, [getUserList])
-
+  }, [getUserList]);
 
   // const renderContent = () => {
   //   if (currentSelection) {
@@ -229,8 +262,11 @@ export default function App() {
       // })
       // var i_str = i.toString()
       // console.log(selections)
-      setSelections(oldSelections => ({ ...oldSelections, [i]: parseInt(event.target.value) }));
-    }
+      setSelections((oldSelections) => ({
+        ...oldSelections,
+        [i]: parseInt(event.target.value),
+      }));
+    };
   }, []);
 
   const arrayOfHandleChoiceSelection = React.useMemo(() => {
@@ -238,46 +274,50 @@ export default function App() {
     return problemContentArray.map((e, i) => handleChoiceSelection(i));
   }, [problemContentArray]);
 
-
   const turnOffTimer = React.useCallback(() => {
     setTimerRunning(false);
-    setButtonText('Start');
-  }, [])
+    setButtonText("Start");
+  }, []);
 
-
-
-  const handleButtonClick = React.useCallback((timerRunning, contestName, selections) => {
-    // console.log('clicked')
-    // console.log(timerRunning)
-    // console.log(contestName)
-    if ((!timerRunning) && contestName !== '' && currentUser !== '') {
-      // setStartTime(new Date().getTime());
-      setTimerRunning(true);
-      setTimerWasRunning(true);
-      setCurrentSelection(1);
-      setButtonText('Submit');
-      setGraded(false);
-      setCleared(false);
-    } else {
-      // updating timerRunning calls useEffect and cleans up previous call
-      // via the returned method (i.e. clearInterval), i.e. stopping the timer
-      // setTimerRunning(false);
-      // setButtonText('Start');
-      turnOffTimer();
-      // console.log(handleSubmit(selections))
-    }
-  }, [turnOffTimer, currentUser]);
-
+  const handleButtonClick = React.useCallback(
+    (timerRunning, contestName, selections) => {
+      // console.log('clicked')
+      // console.log(timerRunning)
+      // console.log(contestName)
+      if (!timerRunning && contestName !== "" && currentUser !== "") {
+        // setStartTime(new Date().getTime());
+        setTimerRunning(true);
+        setTimerWasRunning(true);
+        setCurrentSelection(1);
+        setButtonText("Submit");
+        setGraded(false);
+        setCleared(false);
+      } else {
+        // updating timerRunning calls useEffect and cleans up previous call
+        // via the returned method (i.e. clearInterval), i.e. stopping the timer
+        // setTimerRunning(false);
+        // setButtonText('Start');
+        turnOffTimer();
+        // console.log(handleSubmit(selections))
+      }
+    },
+    [turnOffTimer, currentUser]
+  );
 
   const clearCache = React.useCallback(() => {
     if (contestName && !timerRunning) {
-      removeCookies(contestName, { path: '/' });
-      removeCookies(`${contestName}-time`, { path: '/' });
+      removeCookies(contestName, { path: "/" });
+      removeCookies(`${contestName}-time`, { path: "/" });
       // setSelections(problemContentArray.map((e: ProblemDict, i: number) => -1));
-      setSelections(problemContentArray.reduce((acc: { [key: string]: number }, element, index) => {
-        acc[index.toString()] = -1;
-        return acc
-      }, ({} as { [key: string]: number })));
+      setSelections(
+        problemContentArray.reduce(
+          (acc: { [key: string]: number }, element, index) => {
+            acc[index.toString()] = -1;
+            return acc;
+          },
+          {} as { [key: string]: number }
+        )
+      );
       setGraded(false);
       setCleared(true);
     }
@@ -287,57 +327,76 @@ export default function App() {
   //   setContestName('2019_AMC_12B');
   // }, []);
 
-  const grade = React.useCallback((selections) => {
-    if (contestName) {
-      fetch(`/api/answer/${contestName}`).then(res => res.json()).then(data => {
-        var answer = data.results;
-        setAnswers(oldAnswers => answer);
-        // console.log(answers)
-        // console.log(convertSelections(selections))
-        var scores = convertSelections(selections).map((e, i) => e === '' ? emptyAnswer : e === answer[i] ? correctAnswer : wrongAnswer);
-        var total = scores.reduce((a, b) => a + b, 0)
-        setTotalScore(total);
-        setGraded(true);
+  const grade = React.useCallback(
+    (selections) => {
+      if (contestName) {
+        fetch(`/api/answer/${contestName}`)
+          .then((res) => res.json())
+          .then((data) => {
+            var answer = data.results;
+            setAnswers((oldAnswers) => answer);
+            // console.log(answers)
+            // console.log(convertSelections(selections))
+            var scores = convertSelections(selections).map((e, i) =>
+              e === ""
+                ? emptyAnswer
+                : e === answer[i]
+                ? correctAnswer
+                : wrongAnswer
+            );
+            var total = scores.reduce((a, b) => a + b, 0);
+            setTotalScore(total);
+            setGraded(true);
+          });
       }
-      )
-    }
-  }, [contestName, convertSelections]);
+    },
+    [contestName, convertSelections]
+  );
 
   React.useEffect(() => {
     if (!timerRunning && timerWasRunning) {
-      recordTime(contestName, 0, 'end', currentUser);
+      recordTime(contestName, 0, "end", currentUser);
       recordResponse(contestName, selections, currentUser);
       setTimerWasRunning(false);
     }
-  }, [timerRunning, timerWasRunning])
+  }, [timerRunning, timerWasRunning]);
 
   React.useEffect(() => {
     if (contestName) {
-      setCookies(contestName, selections, { path: '/' })
+      setCookies(contestName, selections, { path: "/" });
     }
-  }, [contestName, selections, setCookies])
+  }, [contestName, selections, setCookies]);
 
   React.useEffect(() => {
     if (contestName) {
-      fetch(`/api/problem/${contestName}`).then(res => res.json()).then(data => {
-        // console.log(data);
-        var results = data.results;
-        // setProblemIDs(results.map((e: ProblemDict, i: number) => i + 1));
-        if (cookies.hasOwnProperty(contestName)) {
-          setSelections(cookies[contestName]);
-        } else {
-          // setSelections(results.map((e: ProblemDict, i: number) => -1));
-          setSelections(results.reduce((acc: { [key: string]: number }, element: any, index: number) => {
-            acc[index.toString()] = -1;
-            return acc
-          }, ({} as { [key: string]: number })));
-        }
-        setProblemContentArray(results);
-        setRefs(results.map(
-          () => React.createRef()
-        ));
-        setGraded(false);
-      });
+      fetch(`/api/problem/${contestName}`)
+        .then((res) => res.json())
+        .then((data) => {
+          // console.log(data);
+          var results = data.results;
+          // setProblemIDs(results.map((e: ProblemDict, i: number) => i + 1));
+          if (cookies.hasOwnProperty(contestName)) {
+            setSelections(cookies[contestName]);
+          } else {
+            // setSelections(results.map((e: ProblemDict, i: number) => -1));
+            setSelections(
+              results.reduce(
+                (
+                  acc: { [key: string]: number },
+                  element: any,
+                  index: number
+                ) => {
+                  acc[index.toString()] = -1;
+                  return acc;
+                },
+                {} as { [key: string]: number }
+              )
+            );
+          }
+          setProblemContentArray(results);
+          setRefs(results.map(() => React.createRef()));
+          setGraded(false);
+        });
     }
   }, [contestName]);
 
@@ -378,18 +437,22 @@ export default function App() {
   React.useEffect(() => {
     const handleKeydown = (e: KeyboardEvent) => {
       if (e.keyCode === 38 || e.keyCode === 37) {
-        setCurrentSelection(index => Math.max(index - 1, 0));
+        setCurrentSelection((index) => Math.max(index - 1, 0));
         e.preventDefault();
       } else if (e.keyCode === 40 || e.keyCode === 39) {
         // console.log('down...')
         // setCurrentSelection(index => Math.min(index + 1, Math.max(...problemIDs)));
-        setCurrentSelection(index => Math.min(index + 1, problemContentArray.length));
+        setCurrentSelection((index) =>
+          Math.min(index + 1, problemContentArray.length)
+        );
         // console.log(currentSelection);
         e.preventDefault();
       }
-    }
-    window.addEventListener('keydown', handleKeydown);
-    return () => { window.removeEventListener('keydown', handleKeydown) }
+    };
+    window.addEventListener("keydown", handleKeydown);
+    return () => {
+      window.removeEventListener("keydown", handleKeydown);
+    };
     // window.addEventListener('keyup', handleKeyPress);
     // window.addEventListener('keydown', e => {
     //   if (e.keyCode === 38 || e.keyCode === 37) {
@@ -405,7 +468,7 @@ export default function App() {
   React.useEffect(() => {
     // MathJaxScript();
     // console.log((window as any).MathJax);
-    if ((window as any).MathJax.hasOwnProperty('typeset')) {
+    if ((window as any).MathJax.hasOwnProperty("typeset")) {
       (window as any).MathJax.typeset();
     }
     // (window as any).MathJax.typeset();
@@ -421,38 +484,50 @@ export default function App() {
       <AppBar position="fixed" className={classes.appBar}>
         <Toolbar className={classes.spreadOut}>
           <Typography variant="h3" noWrap onClick={handleListItemClickMain}>
-            {contestName.replace(/_/g, ' ')}
+            {contestName.replace(/_/g, " ")}
           </Typography>
 
-          <Timer max_secs={4500} timerRunning={timerRunning} contestName={contestName} turnOffTimer={turnOffTimer} cleared={cleared}/>
+          <Timer
+            max_secs={4500}
+            timerRunning={timerRunning}
+            contestName={contestName}
+            turnOffTimer={turnOffTimer}
+            cleared={cleared}
+          />
         </Toolbar>
       </AppBar>
       <Hidden xsDown>
-      <Drawer
-        className={classes.drawer}
-        variant="permanent"
-        classes={{
-          paper: classes.drawerPaper,
-        }}
-      >
-        <Toolbar />
-        <div className={classes.drawerContainer}>
-          <List>
-            {problemContentArray.map((content, index) => (
-              <ListItemMemo index={index} key={index} selected={index + 1 === currentSelection} selection={selections[index]} handleListItemClick={arrayHandleListItemClick[index]} />
-              // <ListItem ref={refs[index]} key={index + 1} divider button onClick={() => handleListItemClick(index + 1)}
-              //   className={index + 1 === currentSelection ? classes.borderHighlight : ''}
-              // // selected={text === currentSelection} classes={{
-              // //   selected: classes.borderHighlight,
-              // // }}
-              // >
-              //   <ListItemText primary={index + 1} />
-              //   <RadioButtons selectedValue={selections[index]} />
-              // </ListItem>
-            ))}
-          </List>
-        </div>
-      </Drawer>
+        <Drawer
+          className={classes.drawer}
+          variant="permanent"
+          classes={{
+            paper: classes.drawerPaper,
+          }}
+        >
+          <Toolbar />
+          <div className={classes.drawerContainer}>
+            <List>
+              {problemContentArray.map((content, index) => (
+                <ListItemMemo
+                  index={index}
+                  key={index}
+                  selected={index + 1 === currentSelection}
+                  selection={selections[index]}
+                  handleListItemClick={arrayHandleListItemClick[index]}
+                />
+                // <ListItem ref={refs[index]} key={index + 1} divider button onClick={() => handleListItemClick(index + 1)}
+                //   className={index + 1 === currentSelection ? classes.borderHighlight : ''}
+                // // selected={text === currentSelection} classes={{
+                // //   selected: classes.borderHighlight,
+                // // }}
+                // >
+                //   <ListItemText primary={index + 1} />
+                //   <RadioButtons selectedValue={selections[index]} />
+                // </ListItem>
+              ))}
+            </List>
+          </div>
+        </Drawer>
       </Hidden>
       <main className={classes.content}>
         <Toolbar />
@@ -460,7 +535,16 @@ export default function App() {
           // needs to prerender due to latex rerendering
           // looks messy if renders and latex rerenders after changing problem
           problemContentArray.map((problemDict, i) => (
-            <ProblemAndChoices visible={(timerRunning || graded)} i={i} problem={problemDict.problem} handleChoiceSelection={arrayOfHandleChoiceSelection[i]} selection={selections[i]} choices={problemDict.choices} key={i} />
+            <ProblemAndChoices
+              visible={currentSelection !== 0 && (timerRunning || graded)}
+              i={i}
+              problem={problemDict.problem}
+              handleChoiceSelection={arrayOfHandleChoiceSelection[i]}
+              selection={selections[i]}
+              choices={problemDict.choices}
+              selected={i + 1 === currentSelection}
+              key={i}
+            />
           ))
           // visible={i === currentSelection - 1 && (timerRunning || graded)}
           // <Box className={i === currentSelection - 1 && timerRunning ? '' : 'hidden'} key={i}>
@@ -477,71 +561,140 @@ export default function App() {
           // <Typography dangerouslySetInnerHTML={{ __html: problemContent }}></Typography>
           // <Choices handleChange={handleChoiceSelection(currentSelection - 1)} selectedValue={selections[currentSelection - 1]} choices={problemChoices} />
         }
-        <Box className={currentSelection === 0 ? 'App' : 'App hidden'}>
+        <Box className={currentSelection === 0 ? "App" : "App hidden"}>
           <Box m={2}>
-            <UserSelector userList={userList} setUserName={addSetCurrentUser} disabled={timerRunning} />
+            <UserSelector
+              userList={userList}
+              setUserName={addSetCurrentUser}
+              disabled={timerRunning}
+            />
           </Box>
           <Box m={2}>
-            <ContestListSelector contestList={availableContests} setContestName={setContestName} disabled={timerRunning} />
+            <ContestListSelector
+              contestList={availableContests}
+              setContestName={setContestName}
+              disabled={timerRunning}
+            />
           </Box>
           <Box m={2}>
-            <Button variant="contained" color="primary" onClick={() => handleButtonClick(timerRunning, contestName, selections)}
-              className={classes.paddie}> {buttonText} </Button>
-            {// </Box>
-              // <Box m={2}>
-            }
-            <Button variant="contained" color="primary" onClick={clearCache} className={classes.paddie}> Clear </Button>
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={() =>
+                handleButtonClick(timerRunning, contestName, selections)
+              }
+              className={classes.paddie}
+            >
+              {" "}
+              {buttonText}{" "}
+            </Button>
             {
               // </Box>
               // <Box m={2}>
             }
-            <Button variant="contained" color="primary" onClick={() => grade(selections)} className={classes.paddie}> Grade </Button>
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={clearCache}
+              className={classes.paddie}
+            >
+              {" "}
+              Clear{" "}
+            </Button>
+            {
+              // </Box>
+              // <Box m={2}>
+            }
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={() => grade(selections)}
+              className={classes.paddie}
+            >
+              {" "}
+              Grade{" "}
+            </Button>
           </Box>
         </Box>
-        <Box className={currentSelection === 0 && graded ? 'App' : 'App hidden'}>
+        <Box
+          className={currentSelection === 0 && graded ? "App" : "App hidden"}
+        >
           <Box m={2}>
-            <Typography variant='h5' align='center' className={classes.header}> Score: {totalScore} </Typography>
+            <Typography variant="h5" align="center" className={classes.header}>
+              {" "}
+              Score: {totalScore}{" "}
+            </Typography>
           </Box>
           <Grid container spacing={2}>
             <Grid item xs={12}>
-              <Grid container justify='center' spacing={2}>
+              <Grid container justify="center" spacing={2}>
                 <Grid item xs={2}>
                   <Typography></Typography>
                 </Grid>
                 <Grid item xs={2}>
-                  <Typography >Response</Typography>
+                  <Typography>Response</Typography>
                 </Grid>
                 <Grid item xs={2}>
-                  <Typography >Answer</Typography>
+                  <Typography>Answer</Typography>
                 </Grid>
               </Grid>
             </Grid>
 
             <Grid item xs={12}>
-
               <Grid container spacing={2}>
-                {
-                  convertSelections(selections).map((selection, i) => (
-                    <Grid item xs={12} key={i}>
-                      <Grid container justify='center' spacing={2}>
-                        <Grid item xs={2}>
-                          <Typography color={selection === "" ? "primary" : selection === answers[i] ? 'initial' : 'secondary'}> {i + 1} </Typography>
-                        </Grid>
-                        <Grid item xs={2}>
-                          <Typography color={selection === "" ? "primary" : selection === answers[i] ? 'initial' : 'secondary'}> {selection || "_"} </Typography>
-                        </Grid>
-                        <Grid item xs={2}>
-                          <Typography color={selection === "" ? "primary" : selection === answers[i] ? 'initial' : 'secondary'}> {answers[i]} </Typography>
-                        </Grid>
+                {convertSelections(selections).map((selection, i) => (
+                  <Grid item xs={12} key={i}>
+                    <Grid container justify="center" spacing={2}>
+                      <Grid item xs={2}>
+                        <Typography
+                          color={
+                            selection === ""
+                              ? "primary"
+                              : selection === answers[i]
+                              ? "initial"
+                              : "secondary"
+                          }
+                        >
+                          {" "}
+                          {i + 1}{" "}
+                        </Typography>
+                      </Grid>
+                      <Grid item xs={2}>
+                        <Typography
+                          color={
+                            selection === ""
+                              ? "primary"
+                              : selection === answers[i]
+                              ? "initial"
+                              : "secondary"
+                          }
+                        >
+                          {" "}
+                          {selection || "_"}{" "}
+                        </Typography>
+                      </Grid>
+                      <Grid item xs={2}>
+                        <Typography
+                          color={
+                            selection === ""
+                              ? "primary"
+                              : selection === answers[i]
+                              ? "initial"
+                              : "secondary"
+                          }
+                        >
+                          {" "}
+                          {answers[i]}{" "}
+                        </Typography>
                       </Grid>
                     </Grid>
-                  ))
-                }
+                  </Grid>
+                ))}
               </Grid>
             </Grid>
           </Grid>
         </Box>
       </main>
-    </div >
+    </div>
   );
 }
