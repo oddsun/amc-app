@@ -460,8 +460,9 @@ export default function App() {
           // needs to prerender due to latex rerendering
           // looks messy if renders and latex rerenders after changing problem
           problemContentArray.map((problemDict, i) => (
-            <ProblemAndChoices visible={i === currentSelection - 1 && (timerRunning || graded)} i={i} problem={problemDict.problem} handleChoiceSelection={arrayOfHandleChoiceSelection[i]} selection={selections[i]} choices={problemDict.choices} key={i} />
+            <ProblemAndChoices visible={(timerRunning || graded)} i={i} problem={problemDict.problem} handleChoiceSelection={arrayOfHandleChoiceSelection[i]} selection={selections[i]} choices={problemDict.choices} key={i} />
           ))
+          // visible={i === currentSelection - 1 && (timerRunning || graded)}
           // <Box className={i === currentSelection - 1 && timerRunning ? '' : 'hidden'} key={i}>
           //   <Typography variant='h5' align='center' className={classes.header}>Problem {i + 1}</Typography>
           //
