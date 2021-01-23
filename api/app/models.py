@@ -22,6 +22,7 @@ class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(20), unique=True, nullable=False)
     responses = db.relationship('Response', backref='user', lazy='dynamic')
+    # lazy dynamic so can be filtered
     response_times = db.relationship('ResponseTime', backref='user', lazy='dynamic')
 
     def __repr__(self):
