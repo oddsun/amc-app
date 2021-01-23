@@ -28,7 +28,7 @@ import ast
 #     return {'problem' : problem.problem, 'choices': problem.choices}
 
 @app.route('/api/problem/<contest_name>')
-def problems(contest_name):
+def get_problems(contest_name):
     # TODO: AIME choices
     contest_name = contest_name.replace('_', ' ')
     problems = Problem.query.filter_by(contest_name=contest_name).all()
@@ -59,7 +59,7 @@ def problems(contest_name):
 
 
 @app.route('/api/answer/<contest_name>')
-def answers(contest_name):
+def get_answers(contest_name):
     contest_name = contest_name.replace('_', ' ')
     answers = Answer.query.filter_by(contest_name=contest_name).all()
     sorted_answers = [a.answer for a in sorted(answers, key=lambda x: x.id)]
@@ -86,7 +86,7 @@ def add_user(user_name):
     return {'results': []}
 
 @app.route('/api/response', methods=['POST'])
-def response():
+def store_response():
     request_data = request.get_json()
     # user_id = request_data['user_id']
     user_name = request_data['user_name']
@@ -102,7 +102,7 @@ def response():
 
 
 @app.route('/api/response_time', methods=['POST'])
-def response_time():
+def store_response_time():
     request_data = request.get_json()
     # user_id = request_data['user_id']
     user_name = request_data['user_name']
@@ -120,3 +120,47 @@ def response_time():
 # @app.route('/test')
 # def test():
 #     return render_template('test.html')
+
+
+@app.route('/api/stats/<user_name>')
+def stats(user_name):
+    current_user = User.query.filter_by(name=user_name).first_or_404()
+    responses = current_user.responses
+    response_times = current_user.response_times
+    out_dict = {}
+    contest_scores = []
+    for response in responses:
+        contest_dict = {}
+        contest_answers = get_answers(response.contest_name)['results']
+        response_list = response.response_str.split(',')
+        score = calc_score(contest_answers, response_list) 
+        contest_scores.append({'contest_name': response.contest_name, 'score': score})
+        contest_rts = response_times.filter_by(contest_name=response.contest_name).all()
+        print(response.contest_name)
+        times_list = calc_time(contest_rts)
+        out_dict[response.contest_name] = times_list
+
+    return {'scores': contest_scores, 'details': out_dict}
+
+
+def calc_score(answers, responses, correct_score=6, empty_score=1.5):
+    return sum(x.lower() == y.lower() for x, y in zip(answers, responses))*correct_score + len(list(filter(lambda x: not x, responses)))*empty_score
+
+def calc_time(response_times):
+    end_times = [item.entry_time for item in filter(lambda x: x.entry_type == 'end', response_times)]
+    times_list = []
+    for end_time in sorted(end_times):
+        times_dict = {}
+        enter_time_dict = {}
+        entries = filter(lambda x: (x.entry_time <= end_time) and x.entry_type != 'end', response_times)
+        for entry in sorted(entries, key=lambda x: (x.entry_time, x.entry_type)):
+            if entry.entry_type == 'enter':
+                enter_time_dict[entry.problem_id] = entry.entry_time
+            elif entry.entry_type == 'exit':
+                times_dict[entry.problem_id] = times_dict.get(entry.problem_id, 0) + (entry.entry_time - enter_time_dict[entry.problem_id]).total_seconds()
+            else:
+                raise Exception(f'Unknown entry_type {entry_tyle}')
+        # converting to minutes
+        times_dict = {k: round(v/60, 1) for k, v in times_dict.items()}
+        times_list.append(times_dict)
+    return times_list

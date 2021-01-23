@@ -21,8 +21,8 @@ class User(db.Model):
     # __tablename__
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(20), unique=True, nullable=False)
-    responses = db.relationship('Response', backref='user', lazy=True)
-    response_times = db.relationship('ResponseTime', backref='user', lazy=True)
+    responses = db.relationship('Response', backref='user', lazy='dynamic')
+    response_times = db.relationship('ResponseTime', backref='user', lazy='dynamic')
 
     def __repr__(self):
         return '<User {}>'.format(self.name)
