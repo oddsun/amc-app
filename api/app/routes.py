@@ -127,40 +127,42 @@ def stats(user_name):
     current_user = User.query.filter_by(name=user_name).first_or_404()
     responses = current_user.responses
     response_times = current_user.response_times
-    out_dict = {}
+    details = []
     contest_scores = []
     for response in responses:
         contest_dict = {}
         contest_answers = get_answers(response.contest_name)['results']
         response_list = response.response_str.split(',')
-        score = calc_score(contest_answers, response_list) 
+        score = calc_score(contest_answers, response_list)
         contest_scores.append({'contest_name': response.contest_name, 'score': score})
         contest_rts = response_times.filter_by(contest_name=response.contest_name).all()
         print(response.contest_name)
-        times_list = calc_time(contest_rts)
-        out_dict[response.contest_name] = times_list
+        times_list = calc_time(contest_rts, contest_answers, response_list, response.entry_time)
+        details.append({'contest_name': response.contest_name, 'time submitted': response.entry_time, 'details': times_list})
 
-    return {'scores': contest_scores, 'details': out_dict}
+    return {'scores': contest_scores, 'details': details}
 
 
 def calc_score(answers, responses, correct_score=6, empty_score=1.5):
     return sum(x.lower() == y.lower() for x, y in zip(answers, responses))*correct_score + len(list(filter(lambda x: not x, responses)))*empty_score
 
-def calc_time(response_times):
-    end_times = [item.entry_time for item in filter(lambda x: x.entry_type == 'end', response_times)]
-    times_list = []
-    for end_time in sorted(end_times):
-        times_dict = {}
-        enter_time_dict = {}
-        entries = filter(lambda x: (x.entry_time <= end_time) and x.entry_type != 'end', response_times)
-        for entry in sorted(entries, key=lambda x: (x.entry_time, x.entry_type)):
-            if entry.entry_type == 'enter':
-                enter_time_dict[entry.problem_id] = entry.entry_time
-            elif entry.entry_type == 'exit':
-                times_dict[entry.problem_id] = times_dict.get(entry.problem_id, 0) + (entry.entry_time - enter_time_dict[entry.problem_id]).total_seconds()
-            else:
-                raise Exception(f'Unknown entry_type {entry_tyle}')
-        # converting to minutes
-        times_dict = {k: round(v/60, 1) for k, v in times_dict.items()}
-        times_list.append(times_dict)
+def calc_time(response_times, answers, responses, response_end_time):
+    end_times = sorted((item.entry_time for item in filter(lambda x: x.entry_type == 'end', response_times)), reverse=True)
+    idx = next(i for i, et in enumerate(end_times) if et <= response_end_time)
+    first = idx == len(end_times)-1
+    times_list = [{'correct answer': a, 'response': r, 'time': 0, 'status': 'correct' if a==r else 'empty' if not r else 'incorrect'} for a, r in zip(answers, responses)]
+    # for end_time in sorted(end_times):
+    # times_dict = {}
+    enter_time_dict = {}
+    entries = filter(lambda x: (x.entry_time <= end_times[idx] and (first or x.entry_time > end_times[idx+1])) and x.entry_type != 'end', response_times)
+    for entry in sorted(entries, key=lambda x: (x.entry_time, x.entry_type)):
+        if entry.entry_type == 'enter':
+            enter_time_dict[entry.problem_id] = entry.entry_time
+        elif entry.entry_type == 'exit':
+            times_list[entry.problem_id-1]['time'] += (entry.entry_time - enter_time_dict[entry.problem_id]).total_seconds() #/ 60
+        else:
+            raise Exception(f'Unknown entry_type {entry_tyle}')
+    # converting to minutes
+    # times_dict = {k: round(v/60, 1) for k, v in times_dict.items()}
+    # times_list.append(times_dict)
     return times_list
