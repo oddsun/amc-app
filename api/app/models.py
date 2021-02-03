@@ -18,7 +18,8 @@ class Answer(db.Model):
 
 class User(db.Model):
     __bind_key__ = 'response'
-    # __tablename__
+    __table_args__ = {'extend_existing': True}
+    # __tablename__ = 'user'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(20), unique=True, nullable=False)
     responses = db.relationship('Response', backref='user', lazy='dynamic')
@@ -31,6 +32,7 @@ class User(db.Model):
 
 class ResponseTime(db.Model):
     __bind_key__ = 'response'
+    __table_args__ = {'extend_existing': True}
     # __tablename__ = 'response_time'
     id = db.Column(db.Integer, primary_key=True)
     problem_id = db.Column(db.Integer, nullable=False)
@@ -39,6 +41,7 @@ class ResponseTime(db.Model):
     entry_time = db.Column(db.DateTime, server_default=func.now())
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'),
         nullable=False)
+    session_id = db.Column(db.Integer)
 
     # def __init__(self, problem_id, entry_type, contest_name):
     #     self.problem_id = problem_id
@@ -52,6 +55,7 @@ class ResponseTime(db.Model):
 
 class Response(db.Model):
     __bind_key__ = 'response'
+    __table_args__ = {'extend_existing': True}
     # __tablename__ = 'response'
     id = db.Column(db.Integer, primary_key=True)
     response_str = db.Column(db.String(150), nullable=False)
@@ -59,6 +63,7 @@ class Response(db.Model):
     entry_time = db.Column(db.DateTime, server_default=func.now())
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'),
         nullable=False)
+    session_id = db.Column(db.Integer)
 
     # def __init__(self, problem_id, entry_type, contest_name):
     #     self.problem_id = problem_id

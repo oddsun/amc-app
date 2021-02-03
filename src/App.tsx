@@ -115,7 +115,7 @@ export default function App() {
   const [graded, setGraded] = React.useState(false);
   const [userList, setUserList] = React.useState<UserOptionType[]>([]);
   const [currentUser, setCurrentUser] = React.useState("");
-  // const [startTime, setStartTIme] = React.useState(0);
+  const [startTime, setStartTime] = React.useState(0);
   // const [hidden, setHidden] = React.useState(false);
   const handleListItemClick = React.useCallback((index: number) => {
     return () => setCurrentSelection(index);
@@ -196,11 +196,12 @@ export default function App() {
           problem_id: currentSelection,
           entry_type: entry_type,
           contest_name: contestName,
+          session_id: startTime,
         }),
       };
       fetch("/api/response_time", postData);
     },
-    []
+    [startTime]
   );
 
   const recordResponse = React.useCallback(
@@ -212,11 +213,12 @@ export default function App() {
           user_name: currentUser,
           contest_name: contestName,
           response: convertSelections(selections),
+          session_id: startTime,
         }),
       };
       fetch("/api/response", postData);
     },
-    [convertSelections]
+    [convertSelections, startTime]
   );
 
   React.useEffect(() => {
@@ -285,7 +287,13 @@ export default function App() {
       // console.log(timerRunning)
       // console.log(contestName)
       if (!timerRunning && contestName !== "" && currentUser !== "") {
-        // setStartTime(new Date().getTime());
+        var temp_time = new Date().getTime();
+        if (cookies.hasOwnProperty(`${contestName}-session-id`)) {
+          temp_time = cookies[`${contestName}-session-id`];
+        } else {
+          setCookies(`${contestName}-session-id`, temp_time, { path: "/" });
+        }
+        setStartTime(temp_time);
         setTimerRunning(true);
         setTimerWasRunning(true);
         setCurrentSelection(1);
@@ -301,13 +309,14 @@ export default function App() {
         // console.log(handleSubmit(selections))
       }
     },
-    [turnOffTimer, currentUser]
+    [turnOffTimer, currentUser, timerRunning, cleared]
   );
 
   const clearCache = React.useCallback(() => {
     if (contestName && !timerRunning) {
       removeCookies(contestName, { path: "/" });
       removeCookies(`${contestName}-time`, { path: "/" });
+      removeCookies(`${contestName}-session-id`, { path: "/" });
       // setSelections(problemContentArray.map((e: ProblemDict, i: number) => -1));
       setSelections(
         problemContentArray.reduce(

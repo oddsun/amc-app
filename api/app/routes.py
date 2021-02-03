@@ -92,7 +92,8 @@ def store_response():
     user_name = request_data['user_name']
     response_str = ','.join(request_data['response'])
     contest_name = request_data['contest_name']
-    new_response = Response(response_str=response_str, contest_name=contest_name)
+    session_id = request_data['session_id']
+    new_response = Response(response_str=response_str, contest_name=contest_name, session_id=session_id)
     # current_user = User.query.get_or_404(user_id)
     current_user = User.query.filter_by(name=user_name).first_or_404()
     current_user.responses.append(new_response)
@@ -109,8 +110,9 @@ def store_response_time():
     problem_id = request_data['problem_id']
     contest_name = request_data['contest_name']
     entry_type = request_data['entry_type']
+    session_id = request_data['session_id']
     new_rt = ResponseTime(problem_id=problem_id, contest_name=contest_name,
-                            entry_type=entry_type)
+                            entry_type=entry_type, session_id=session_id)
     # current_user = User.query.get_or_404(user_id)
     current_user = User.query.filter_by(name=user_name).first_or_404()
     current_user.response_times.append(new_rt)
@@ -147,7 +149,14 @@ def calc_score(answers, responses, correct_score=6, empty_score=1.5):
     return sum(x.lower() == y.lower() for x, y in zip(answers, responses))*correct_score + len(list(filter(lambda x: not x, responses)))*empty_score
 
 def calc_time(response_times, answers, responses, response_end_time):
+    # fix response_end_time, sometimes a few sec diff from end response_times
+    zero_times = sorted((item.entry_time for item in filter(lambda x: x.entry_type == 'enter' and x.problem_id==1, response_times)))
     end_times = sorted((item.entry_time for item in filter(lambda x: x.entry_type == 'end', response_times)), reverse=True)
+    next_start = next((i for i, et in enumerate(zero_times) if et > response_end_time), None)
+    # replace response_end_time with largest end time or the next start time
+    response_end_time = end_times[0] if next_start is None else zero_times[next_start]
+
+    # get index of correct end time
     idx = next(i for i, et in enumerate(end_times) if et <= response_end_time)
     first = idx == len(end_times)-1
     times_list = [{'correct answer': a, 'response': r, 'time': 0, 'status': 'correct' if a==r else 'empty' if not r else 'incorrect'} for a, r in zip(answers, responses)]
