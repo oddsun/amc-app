@@ -23,6 +23,17 @@ Runs the flask backend in the development model. Connects with React front end.
 Launches the test runner in the interactive watch mode.\
 See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
 
+### `./build.sh`
+
+Automated build script. Make it executable with `chmod u+x build.sh`.
+
+The script does the following
+
+1. Archives old build to `buildvx.x.x` where `x.x.x` was the previous version.
+2. Increment minor version `x.x.x` to `x.x.x+1` in `package.json`
+3. calls `npm run build` (see description below)
+4. add symlink in `static` directory to `data` directory
+
 ### `npm run build`
 
 Builds the app for production to the `build` folder.\
