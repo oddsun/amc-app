@@ -2,9 +2,11 @@ import React from "react";
 import { Box, Typography, Container, Divider } from "@material-ui/core";
 import Choices from "./Choices";
 import Problem from "./Problem";
+import TextField from "@material-ui/core/TextField";
 
 import { createStyles, Theme, makeStyles } from "@material-ui/core/styles";
 
+const validAIME = (x: string) => /^(\d{3}|\d{0})$/.test(x);
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
     header: {
@@ -33,8 +35,9 @@ function ProblemAndChoices(props: {
   problem: string;
   handleChoiceSelection: (event: React.ChangeEvent<HTMLInputElement>) => void;
   choices: string[];
-  selection: number;
+  selection: number | string;
   selected: boolean;
+  aime: boolean;
 }) {
   const classes = useStyles();
   // can't add ref to box yet, fixed in material ui v5
@@ -55,7 +58,7 @@ function ProblemAndChoices(props: {
     }
   }, [props.selected]);
 
-  // console.log(props)
+  // console.log(props);
   return (
     <Box
       className={
@@ -74,12 +77,20 @@ function ProblemAndChoices(props: {
         </Typography>
 
         <Problem problem={props.problem} />
-        <Choices
-          handleChange={props.handleChoiceSelection}
-          selectedValue={props.selection}
-          choices={props.choices}
-          selected={props.selected}
-        />
+        {props.aime ? (
+          <TextField
+            value={props.selection === undefined ? "" : props.selection}
+            onChange={props.handleChoiceSelection}
+            error={!validAIME(props.selection as string)}
+          />
+        ) : (
+          <Choices
+            handleChange={props.handleChoiceSelection}
+            selectedValue={props.selection as number}
+            choices={props.choices}
+            selected={props.selected}
+          />
+        )}
       </Container>
     </Box>
   );

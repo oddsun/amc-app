@@ -71,9 +71,9 @@ const useStyles = makeStyles((theme: Theme) =>
   })
 );
 
-const correctAnswer: number = 6;
-const emptyAnswer: number = 1.5;
-const wrongAnswer: number = 0;
+// const correctAnswer: number = 6;
+// const emptyAnswer: number = 1.5;
+// const wrongAnswer: number = 0;
 
 interface UserOptionType {
   name: string;
@@ -96,9 +96,9 @@ export default function App() {
   // const [problemIDs, setProblemIDs] = React.useState<number[]>([]);
   // TODO: slow for long contest
   // const [selections, setSelections] = React.useState<number[]>([]);
-  const [selections, setSelections] = React.useState<{ [key: string]: number }>(
-    {}
-  );
+  const [selections, setSelections] = React.useState<{
+    [key: string]: number | string;
+  }>({});
   const [answers, setAnswers] = React.useState<string[]>([]);
   const [totalScore, setTotalScore] = React.useState(0);
   const [availableContests, setAvailableContests] = React.useState([]);
@@ -116,10 +116,16 @@ export default function App() {
   const [userList, setUserList] = React.useState<UserOptionType[]>([]);
   const [currentUser, setCurrentUser] = React.useState("");
   const [startTime, setStartTime] = React.useState(0);
+  const [aime, setAIME] = React.useState(false);
+
+  const [correctAnswer, setCorrectAnswer] = React.useState(6);
+  const [emptyAnswer, setEmptyAnswer] = React.useState(1.5);
+  const [wrongAnswer, setWrongAnswer] = React.useState(0);
   // const [hidden, setHidden] = React.useState(false);
   const handleListItemClick = React.useCallback((index: number) => {
     return () => setCurrentSelection(index);
   }, []);
+  const validAIMEpartial = React.useCallback((x) => /^\d{0,3}$/.test(x), []);
 
   const handleListItemClickMain = React.useMemo(
     () => handleListItemClick(0),
@@ -139,22 +145,29 @@ export default function App() {
   // }, []);
 
   const convertSelections = React.useCallback(
-    (selections: { [key: string]: number }) => {
+    (selections: { [key: string]: number | string }) => {
       if (timerRunning) {
         // console.log(`timerRunning ${timerRunning}`)
         // console.log(`timerWasRunning ${timerWasRunning}`)
         return [];
       }
+      // console.log(aime);
       // console.log(Object.keys(selections).sort((a, b) => parseInt(a) - parseInt(b)))
-      return Object.keys(selections)
-        .sort((a, b) => parseInt(a) - parseInt(b))
-        .map((key) =>
-          selections[key] === -1
-            ? ""
-            : String.fromCharCode(65 + selections[key])
-        );
+      if (aime) {
+        return Object.keys(selections)
+          .sort((a, b) => parseInt(a) - parseInt(b))
+          .map((key) => selections[key]);
+      } else {
+        return Object.keys(selections)
+          .sort((a, b) => parseInt(a) - parseInt(b))
+          .map((key) =>
+            selections[key] === -1
+              ? ""
+              : String.fromCharCode(65 + (selections[key] as number))
+          );
+      }
     },
-    [timerRunning]
+    [timerRunning, aime]
   );
 
   const getUserList = React.useCallback(() => {
@@ -222,6 +235,16 @@ export default function App() {
   );
 
   React.useEffect(() => {
+    if (aime) {
+      setCorrectAnswer(1);
+      setEmptyAnswer(0);
+    } else {
+      setCorrectAnswer(6);
+      setEmptyAnswer(1.5);
+    }
+  }, [aime]);
+
+  React.useEffect(() => {
     if (currentSelection > 0 && timerRunning) {
       recordTime(contestName, currentSelection, "enter", currentUser);
       return () =>
@@ -250,26 +273,40 @@ export default function App() {
   //   }
   // }
 
-  const handleChoiceSelection = React.useCallback((i: number) => {
-    return (event: React.ChangeEvent<HTMLInputElement>) => {
-      // setSelections(oldSelections => oldSelections.map((e, j) => (
-      //   j !== i ? e : parseInt(event.target.value)
-      // )));
-      // console.log(selections)
-      // selections[i] = parseInt(event.target.value)
-      // setSelections(oldSelections => {
-      //   let newSelections = [...oldSelections];
-      //   newSelections[i] = parseInt(event.target.value);
-      //   return newSelections;
-      // })
-      // var i_str = i.toString()
-      // console.log(selections)
-      setSelections((oldSelections) => ({
-        ...oldSelections,
-        [i]: parseInt(event.target.value),
-      }));
-    };
-  }, []);
+  const handleChoiceSelection = React.useCallback(
+    (i: number) => {
+      if (aime) {
+        return (event: React.ChangeEvent<HTMLInputElement>) => {
+          if (validAIMEpartial(event.target.value)) {
+            setSelections((oldSelections) => ({
+              ...oldSelections,
+              [i]: event.target.value,
+            }));
+          }
+        };
+      } else {
+        return (event: React.ChangeEvent<HTMLInputElement>) => {
+          // setSelections(oldSelections => oldSelections.map((e, j) => (
+          //   j !== i ? e : parseInt(event.target.value)
+          // )));
+          // console.log(selections)
+          // selections[i] = parseInt(event.target.value)
+          // setSelections(oldSelections => {
+          //   let newSelections = [...oldSelections];
+          //   newSelections[i] = parseInt(event.target.value);
+          //   return newSelections;
+          // })
+          // var i_str = i.toString()
+          // console.log(selections)
+          setSelections((oldSelections) => ({
+            ...oldSelections,
+            [i]: parseInt(event.target.value),
+          }));
+        };
+      }
+    },
+    [aime]
+  );
 
   const arrayOfHandleChoiceSelection = React.useMemo(() => {
     // console.log('creating function');
@@ -320,17 +357,17 @@ export default function App() {
       // setSelections(problemContentArray.map((e: ProblemDict, i: number) => -1));
       setSelections(
         problemContentArray.reduce(
-          (acc: { [key: string]: number }, element, index) => {
-            acc[index.toString()] = -1;
+          (acc: { [key: string]: number | string }, element, index) => {
+            acc[index.toString()] = aime ? "" : -1;
             return acc;
           },
-          {} as { [key: string]: number }
+          {} as { [key: string]: number | string }
         )
       );
       setGraded(false);
       setCleared(true);
     }
-  }, [contestName, problemContentArray, removeCookies, timerRunning]);
+  }, [contestName, problemContentArray, removeCookies, timerRunning, aime]);
 
   // React.useEffect(() => {
   //   setContestName('2019_AMC_12B');
@@ -345,7 +382,7 @@ export default function App() {
             var answer = data.results;
             setAnswers((oldAnswers) => answer);
             // console.log(answers)
-            // console.log(convertSelections(selections))
+            // console.log(convertSelections(selections));
             var scores = convertSelections(selections).map((e, i) =>
               e === ""
                 ? emptyAnswer
@@ -359,9 +396,10 @@ export default function App() {
           });
       }
     },
-    [contestName, convertSelections]
+    [contestName, convertSelections, correctAnswer, emptyAnswer, wrongAnswer]
   );
 
+  // submit response
   React.useEffect(() => {
     if (!timerRunning && timerWasRunning) {
       recordTime(contestName, 0, "end", currentUser);
@@ -370,14 +408,18 @@ export default function App() {
     }
   }, [timerRunning, timerWasRunning]);
 
+  // save selection -> cookies
   React.useEffect(() => {
     if (contestName) {
       setCookies(contestName, selections, { path: "/" });
     }
-  }, [contestName, selections, setCookies]);
+  }, [selections, setCookies]);
 
+  // fetch contest
   React.useEffect(() => {
     if (contestName) {
+      setGraded(false);
+      setAIME(contestName.includes("AIME"));
       fetch(`/api/problem/${contestName}`)
         .then((res) => res.json())
         .then((data) => {
@@ -387,27 +429,28 @@ export default function App() {
           if (cookies.hasOwnProperty(contestName)) {
             setSelections(cookies[contestName]);
           } else {
+            // console.log("setting selections");
             // setSelections(results.map((e: ProblemDict, i: number) => -1));
             setSelections(
               results.reduce(
                 (
-                  acc: { [key: string]: number },
+                  acc: { [key: string]: number | string },
                   element: any,
                   index: number
                 ) => {
-                  acc[index.toString()] = -1;
+                  // console.log(contestName.includes("AIME"));
+                  acc[index.toString()] = aime ? "" : -1;
                   return acc;
                 },
-                {} as { [key: string]: number }
+                {} as { [key: string]: number | string }
               )
             );
           }
           setProblemContentArray(results);
           setRefs(results.map(() => React.createRef()));
-          setGraded(false);
         });
     }
-  }, [contestName]);
+  }, [contestName, aime]);
 
   // React.useEffect(() => {
   //   if (currentSelection > 0 && currentSelection < refs.length) {
@@ -443,6 +486,7 @@ export default function App() {
   //   }
   // }, [currentSelection, refs, timerRunning, problemContentArray]);
 
+  // handle arrow keys
   React.useEffect(() => {
     const handleKeydown = (e: KeyboardEvent) => {
       if (e.keyCode === 38 || e.keyCode === 37) {
@@ -474,6 +518,7 @@ export default function App() {
     // });
   }, [problemContentArray]);
 
+  // typeset latex
   React.useEffect(() => {
     // MathJaxScript();
     // console.log((window as any).MathJax);
@@ -523,6 +568,7 @@ export default function App() {
                   selected={index + 1 === currentSelection}
                   selection={selections[index]}
                   handleListItemClick={arrayHandleListItemClick[index]}
+                  aime={aime}
                 />
                 // <ListItem ref={refs[index]} key={index + 1} divider button onClick={() => handleListItemClick(index + 1)}
                 //   className={index + 1 === currentSelection ? classes.borderHighlight : ''}
@@ -553,6 +599,7 @@ export default function App() {
               choices={problemDict.choices}
               selected={i + 1 === currentSelection}
               key={i}
+              aime={aime}
             />
           ))
           // visible={i === currentSelection - 1 && (timerRunning || graded)}

@@ -3,6 +3,7 @@ import ListItem from "@material-ui/core/ListItem";
 // import ListItemIcon from '@material-ui/core/ListItemIcon';
 import ListItemText from "@material-ui/core/ListItemText";
 import RadioButtons from "./RadioButtons";
+import TextField from "@material-ui/core/TextField";
 import { createStyles, Theme, makeStyles } from "@material-ui/core/styles";
 
 const useStyles = makeStyles((theme: Theme) =>
@@ -26,12 +27,14 @@ const useStyles = makeStyles((theme: Theme) =>
 function ListItemMemo(props: {
   index: number;
   selected: boolean;
-  selection: number;
+  selection: number | string;
   handleListItemClick: () => void;
+  aime: boolean;
 }) {
   const classes = useStyles();
   const item = React.useRef<HTMLDivElement>(null);
 
+  // scroll into view
   React.useEffect(() => {
     // console.log('clicked')
     var rect = item?.current?.getBoundingClientRect();
@@ -47,6 +50,13 @@ function ListItemMemo(props: {
     }
   }, [props.selected]);
 
+  // const handleChange = React.useCallback(
+  //   (event: React.ChangeEvent<HTMLInputElement>) => {
+  //     setName(event.target.value);
+  //   },
+  //   []
+  // );
+
   return (
     <ListItem
       ref={item}
@@ -58,7 +68,16 @@ function ListItemMemo(props: {
       }
     >
       <ListItemText primary={props.index + 1} />
-      <RadioButtons selectedValue={props.selection} />
+      {props.aime ? (
+        <TextField
+          value={props.selection === undefined ? "" : props.selection}
+          InputProps={{
+            readOnly: true,
+          }}
+        />
+      ) : (
+        <RadioButtons selectedValue={props.selection as number} />
+      )}
     </ListItem>
   );
 }
