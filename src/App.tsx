@@ -80,6 +80,9 @@ interface UserOptionType {
   id: number;
 }
 
+// TODO: add column remaining time in db, and handle pause/resume in backend
+// TODO: add option to load response/remaining time from server
+
 export default function App() {
   const classes = useStyles();
   const [cookies, setCookies, removeCookies] = useCookies();
@@ -121,6 +124,7 @@ export default function App() {
   const [correctAnswer, setCorrectAnswer] = React.useState(6);
   const [emptyAnswer, setEmptyAnswer] = React.useState(1.5);
   const [wrongAnswer, setWrongAnswer] = React.useState(0);
+  const [totalTime, setTotalTime] = React.useState(4500);
   // const [hidden, setHidden] = React.useState(false);
   const handleListItemClick = React.useCallback((index: number) => {
     return () => setCurrentSelection(index);
@@ -238,9 +242,11 @@ export default function App() {
     if (aime) {
       setCorrectAnswer(1);
       setEmptyAnswer(0);
+      setTotalTime(5400);
     } else {
       setCorrectAnswer(6);
       setEmptyAnswer(1.5);
+      setTotalTime(4500);
     }
   }, [aime]);
 
@@ -342,6 +348,9 @@ export default function App() {
         // via the returned method (i.e. clearInterval), i.e. stopping the timer
         // setTimerRunning(false);
         // setButtonText('Start');
+        setCookies(`${contestName}-time-stop`, new Date().getTime(), {
+          path: "/",
+        });
         turnOffTimer();
         // console.log(handleSubmit(selections))
       }
@@ -364,6 +373,26 @@ export default function App() {
           {} as { [key: string]: number | string }
         )
       );
+      setGraded(false);
+      setCleared(true);
+    }
+  }, [contestName, problemContentArray, removeCookies, timerRunning, aime]);
+
+  const clearTime = React.useCallback(() => {
+    if (contestName && !timerRunning) {
+      // removeCookies(contestName, { path: "/" });
+      removeCookies(`${contestName}-time`, { path: "/" });
+      // removeCookies(`${contestName}-session-id`, { path: "/" });
+      // setSelections(problemContentArray.map((e: ProblemDict, i: number) => -1));
+      // setSelections(
+      //   problemContentArray.reduce(
+      //     (acc: { [key: string]: number | string }, element, index) => {
+      //       acc[index.toString()] = aime ? "" : -1;
+      //       return acc;
+      //     },
+      //     {} as { [key: string]: number | string }
+      //   )
+      // );
       setGraded(false);
       setCleared(true);
     }
@@ -542,7 +571,7 @@ export default function App() {
           </Typography>
 
           <Timer
-            max_secs={4500}
+            max_secs={totalTime}
             timerRunning={timerRunning}
             contestName={contestName}
             turnOffTimer={turnOffTimer}
@@ -656,6 +685,15 @@ export default function App() {
             >
               {" "}
               Clear{" "}
+            </Button>
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={clearTime}
+              className={classes.paddie}
+            >
+              {" "}
+              Reset Time{" "}
             </Button>
             {
               // </Box>
