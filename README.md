@@ -2,7 +2,7 @@
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
-## Available Scripts
+## Available Scripts -- Development
 
 In the project directory, you can run:
 
@@ -22,6 +22,8 @@ Runs the flask backend in the development model. Connects with React front end.
 
 Launches the test runner in the interactive watch mode.\
 See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+
+## Available Scripts -- Build React App
 
 ### `./build.sh`
 
@@ -63,3 +65,80 @@ To learn React, check out the [React documentation](https://reactjs.org/).
 ## Init Multiple Flask SQLAlchemy Databases
 
 `flask db init --multidb`
+
+## Deployment
+
+### Deploy React App
+
+```bash
+sudo apt install nginx
+sudo rm /etc/nginx/sites-enabled/default
+```
+
+Then, create a nginx config file for the react app at `/etc/nginx/sites-enabled/amc-app.nginx` with the following Content
+
+```
+server {
+    listen 80;
+    root /path-to-your-app/build;
+    index index.html;
+
+    location / {
+        try_files $uri $uri/ =404;
+    }
+
+    location /api {
+        include proxy_params;
+        proxy_pass http://localhost:5000;
+    }
+}
+```
+
+This serves the React App while forwarding all the `api` requests to `localhost:5000` where the flask app is hosted (setup below). Note that you can enable SSL and use port 443 is you have signed SSL certificate.
+
+Finally, add a link in the `sites-available` like below and reload `nginx`:
+
+```bash
+sudo ln -s /etc/nginx/sites-available/amc-app.nginx /etc/nginx/sites-enabled/amc-app.nginx
+sudo systemctl reload nginx
+```
+
+### Deploy Flask App
+
+The flask app can be deployed with `gunicorn`, though there are other methods/servers as well.
+
+First, install `gunicorn` inside virtual environment
+
+```
+(venv) $ pip install gunicorn
+```
+
+Then, create service file `/etc/systemd/system/amc-app.service` to automatically start the Flask app
+
+```
+[Unit]
+Description=AMC APP
+After=network.target
+
+[Service]
+User=od
+WorkingDirectory=/path-to-your-app/api
+ExecStart=/path-to-your-app/api/venv/bin/gunicorn -b 127.0.0.1:5000 -w 4 wsgi:app
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+```
+
+Note `gunicorn` serves the Flask app at `127.0.0.1:5000`. Make sure this matches the `proxy_pass` setting in `nginx` config file above.
+
+Finally, reload `systemd` and start Flask app
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl start amc-app
+sudo systemctl enable amc-app
+sudo systemctl status amc-app
+```
+
+And now, you are all set! Enjoy your full-stack React-Flask app.
