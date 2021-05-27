@@ -34,11 +34,13 @@ def get_problems(contest_name):
     problems = Problem.query.filter_by(contest_name=contest_name).all()
     # print(problems)
     for problem in problems:
-        problem.problem = problem.problem.replace('static/data/imgs', '/static/data/imgs').replace('<img', '<br/><br/><img')
+        problem.problem = problem.problem.replace('static/data/imgs', '/static/data/imgs').replace('<img',
+                                                                                                   '<br/><br/><img')
         # problem.choices = ast.literal_eval(problem.choices)
         if problem.choices not in ['null', '[]']:
-            problem.choices = [chr(i + ord('A')) + '. ' + choice for i, choice in enumerate(ast.literal_eval(problem.choices))]
-            if 'amc' in contest_name.lower() and len(problem.choices)<5:
+            problem.choices = [chr(i + ord('A')) + '. ' + choice for i, choice in
+                               enumerate(ast.literal_eval(problem.choices))]
+            if 'amc' in contest_name.lower() and len(problem.choices) < 5:
                 problem.choices = problem.choices + [chr(i + ord('A')) for i in range(len(problem.choices), 5)]
         else:
             problem.choices = [chr(i + ord('A')) for i in range(5)]
@@ -47,7 +49,8 @@ def get_problems(contest_name):
         problem.problem = problem.problem.replace('&gt;', r'\gt ').replace('&lt;', r'\lt ')
         problem.choices = [x.replace('&gt;', r'\gt ').replace('&lt;', r'\lt ') for x in problem.choices]
         # fix tabular (should replace with img in scraping)
-        problem.problem = problem.problem.replace('\\(\\begin{tabular}', '\\[\\begin{array}').replace('\\end{tabular}\\)', '\\end{array}\\]')
+        problem.problem = problem.problem.replace('\\(\\begin{tabular}', '\\[\\begin{array}').replace(
+            '\\end{tabular}\\)', '\\end{array}\\]')
 
         # put choices in problems if images in choices
         if any('<img' in choice for choice in problem.choices):
@@ -55,7 +58,9 @@ def get_problems(contest_name):
             # problem.choices = [chr(i + ord('A')) for i in range(5)]
     # return render_template('problem.html', id=id, problem=problem)
     # print(type(problems[0].problem))
-    return {'results': sorted(({'problem' : problem.problem, 'choices': problem.choices, 'id':problem.id} for problem in problems), key=lambda x: x['id'])}
+    return {'results': sorted(
+        ({'problem': problem.problem, 'choices': problem.choices, 'id': problem.id} for problem in problems),
+        key=lambda x: x['id'])}
 
 
 @app.route('/api/answer/<contest_name>')
@@ -65,16 +70,19 @@ def get_answers(contest_name):
     sorted_answers = [a.answer for a in sorted(answers, key=lambda x: x.id)]
     return {'results': sorted_answers}
 
+
 @app.route('/api/available_contests')
 def available_contests():
     contests = Problem.query.with_entities(Problem.contest_name).distinct()
     return {'available_contests': [x[0] for x in contests]}
+
 
 @app.route('/api/users')
 def users():
     available_users = User.query.all()
     results = [{column.name: getattr(row, column.name) for column in row.__table__.columns} for row in available_users]
     return {'results': results}
+
 
 @app.route('/api/adduser/<user_name>')
 def add_user(user_name):
@@ -84,6 +92,7 @@ def add_user(user_name):
         db.session.commit()
         return users()
     return {'results': []}
+
 
 @app.route('/api/response', methods=['POST'])
 def store_response():
@@ -112,13 +121,15 @@ def store_response_time():
     entry_type = request_data['entry_type']
     session_id = request_data['session_id']
     new_rt = ResponseTime(problem_id=problem_id, contest_name=contest_name,
-                            entry_type=entry_type, session_id=session_id)
+                          entry_type=entry_type, session_id=session_id)
     # current_user = User.query.get_or_404(user_id)
     current_user = User.query.filter_by(name=user_name).first_or_404()
     current_user.response_times.append(new_rt)
     db.session.add(new_rt)
     db.session.commit()
     return {column.name: getattr(new_rt, column.name) for column in new_rt.__table__.columns}
+
+
 # @app.route('/test')
 # def test():
 #     return render_template('test.html')
@@ -140,35 +151,44 @@ def stats(user_name):
         contest_rts = response_times.filter_by(contest_name=response.contest_name).all()
         print(response.contest_name)
         times_list = calc_time(contest_rts, contest_answers, response_list, response.entry_time)
-        details.append({'contest_name': response.contest_name, 'time submitted': response.entry_time, 'details': times_list})
+        details.append(
+            {'contest_name': response.contest_name, 'time submitted': response.entry_time, 'details': times_list})
 
     return {'scores': contest_scores, 'details': details}
 
 
 def calc_score(answers, responses, correct_score=6, empty_score=1.5):
-    return sum(x.lower() == y.lower() for x, y in zip(answers, responses))*correct_score + len(list(filter(lambda x: not x, responses)))*empty_score
+    return sum(x.lower() == y.lower() for x, y in zip(answers, responses)) * correct_score + len(
+        list(filter(lambda x: not x, responses))) * empty_score
+
 
 def calc_time(response_times, answers, responses, response_end_time):
     # fix response_end_time, sometimes a few sec diff from end response_times
-    zero_times = sorted((item.entry_time for item in filter(lambda x: x.entry_type == 'enter' and x.problem_id==1, response_times)))
-    end_times = sorted((item.entry_time for item in filter(lambda x: x.entry_type == 'end', response_times)), reverse=True)
+    zero_times = sorted(
+        (item.entry_time for item in filter(lambda x: x.entry_type == 'enter' and x.problem_id == 1, response_times)))
+    end_times = sorted((item.entry_time for item in filter(lambda x: x.entry_type == 'end', response_times)),
+                       reverse=True)
     next_start = next((i for i, et in enumerate(zero_times) if et > response_end_time), None)
     # replace response_end_time with largest end time or the next start time
     response_end_time = end_times[0] if next_start is None else zero_times[next_start]
 
     # get index of correct end time
     idx = next(i for i, et in enumerate(end_times) if et <= response_end_time)
-    first = idx == len(end_times)-1
-    times_list = [{'correct answer': a, 'response': r, 'time': 0, 'status': 'correct' if a==r else 'empty' if not r else 'incorrect'} for a, r in zip(answers, responses)]
+    first = idx == len(end_times) - 1
+    times_list = [{'correct answer': a, 'response': r, 'time': 0,
+                   'status': 'correct' if a == r else 'empty' if not r else 'incorrect'} for a, r in
+                  zip(answers, responses)]
     # for end_time in sorted(end_times):
     # times_dict = {}
     enter_time_dict = {}
-    entries = filter(lambda x: (x.entry_time <= end_times[idx] and (first or x.entry_time > end_times[idx+1])) and x.entry_type != 'end', response_times)
+    entries = filter(lambda x: (x.entry_time <= end_times[idx] and (
+                first or x.entry_time > end_times[idx + 1])) and x.entry_type != 'end', response_times)
     for entry in sorted(entries, key=lambda x: (x.entry_time, x.entry_type)):
         if entry.entry_type == 'enter':
             enter_time_dict[entry.problem_id] = entry.entry_time
         elif entry.entry_type == 'exit':
-            times_list[entry.problem_id-1]['time'] += (entry.entry_time - enter_time_dict[entry.problem_id]).total_seconds() #/ 60
+            times_list[entry.problem_id - 1]['time'] += (
+                        entry.entry_time - enter_time_dict[entry.problem_id]).total_seconds()  # / 60
         else:
             raise Exception(f'Unknown entry_type {entry_tyle}')
     # converting to minutes

@@ -40,7 +40,7 @@ class ResponseTime(db.Model):
     contest_name = db.Column(db.String(20), nullable=False)
     entry_time = db.Column(db.DateTime, server_default=func.now())
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'),
-        nullable=False)
+                        nullable=False)
     session_id = db.Column(db.Integer)
 
     # def __init__(self, problem_id, entry_type, contest_name):
@@ -51,7 +51,8 @@ class ResponseTime(db.Model):
 
     def __repr__(self):
         return '<ResponseTime {} {} in {} at {}>'.format(self.entry_type,
-        self.problem_id, self.contest_name, self.entry_time)
+                                                         self.problem_id, self.contest_name, self.entry_time)
+
 
 class Response(db.Model):
     __bind_key__ = 'response'
@@ -62,7 +63,7 @@ class Response(db.Model):
     contest_name = db.Column(db.String(20), nullable=False)
     entry_time = db.Column(db.DateTime, server_default=func.now())
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'),
-        nullable=False)
+                        nullable=False)
     session_id = db.Column(db.Integer)
 
     # def __init__(self, problem_id, entry_type, contest_name):

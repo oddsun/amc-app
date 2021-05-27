@@ -68,6 +68,8 @@ To learn React, check out the [React documentation](https://reactjs.org/).
 
 ## Deployment
 
+Credit: https://blog.miguelgrinberg.com/post/how-to-deploy-a-react--flask-project
+
 ### Deploy React App
 
 ```bash
