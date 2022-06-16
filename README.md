@@ -17,7 +17,7 @@ Full stack react-flask application hosting multiple choice online testing for pr
 7. Clicking on test name on top left corner will show testing options to "submit" and "grade"
 ![options](https://user-images.githubusercontent.com/1161465/173982157-fbabc336-138e-460f-843e-74430faaad2a.png)
 8. Upon submit, the response will be written to the response database for record.
-9. Click on grade to grade the response vs correct answers
+9. Click on grade to grade the response vs correct answers (pulled from answers database)
 ![grade](https://user-images.githubusercontent.com/1161465/173982677-4c95cb6a-295a-4d10-a790-af635498461b.png)
 
 ## TODO
