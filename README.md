@@ -1,6 +1,29 @@
-# Getting Started with Create React App
+# AMC APP
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+Full stack react-flask application hosting multiple choice online testing for practice AMC tests. (This repo does not include problems database.)
+
+## Key Features
+1. Pick user and test. User entry is auto generated in user database if doesn't exist
+![problem picker](https://user-images.githubusercontent.com/1161465/173981438-a2a4b7df-f6aa-4781-96cf-df1ea76730d4.png)
+2. Pick from list of problems in the problem database hosted on server. This loads the problem via flask backend.
+3. If user has previously taken the test, old grades will be shown. Previous answers can be cleared to retake the test. New response are timestamped and auto-recorded when submitted so will not overwrite old response.
+4. After start, test questions will be shown and count down on top right corner will start
+![test_example](https://user-images.githubusercontent.com/1161465/173981763-87d0b93f-be33-4248-a360-0231c70ffba9.png)
+5. User up/down arrow to focus problems. Focused problem will have red border. This helps record time spent on a particular problem in the response database (via flask  backend) and can be used for further analysis.
+5. Response is mirrored on left for easy viewing. Each mirrored entry on left can be clicked to autoscroll the center of browser screen to that problem.
+6. Choices will be cached in browser cache in case browser is accidently exited. Upon resume, the existing responses and timer time will be reloaded from cache.
+7. Problems can contain images
+![img](https://user-images.githubusercontent.com/1161465/173982048-3b3e076a-7b92-4f4b-bcab-5016ef0f358d.png)
+7. Clicking on test name on top left corner will show testing options to "submit" and "grade"
+![options](https://user-images.githubusercontent.com/1161465/173982157-fbabc336-138e-460f-843e-74430faaad2a.png)
+8. Upon submit, the response will be written to the response database for record.
+9. Click on grade to grade the response vs correct answers
+![grade](https://user-images.githubusercontent.com/1161465/173982677-4c95cb6a-295a-4d10-a790-af635498461b.png)
+
+## TODO
+1. Add visualization of past scores
+2. Add visualization and analysis of time spent on questions
+3. Add stats/summary page for user
 
 ## Available Scripts -- Development
 
