@@ -1,4 +1,6 @@
 # AMC APP
+[![GitHub license](https://img.shields.io/github/license/oddsun/amc-app)](https://github.com/oddsun/amc-app/blob/master/LICENSE)
+![GitHub top language](https://img.shields.io/github/languages/top/oddsun/amc-app)
 
 Full stack react-flask application hosting multiple choice online testing for practice AMC tests. (This repo does not include problems database.)
 
